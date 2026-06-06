@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Archtech - AI Sales Assistant Hub</title>
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: #f1f5f9; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-900 antialiased h-screen flex flex-col overflow-hidden">
+
+    <header class="bg-white border-b border-slate-200 shrink-0 px-6 py-4 flex items-center justify-between shadow-xs">
+        <div class="flex items-center space-x-3">
+            <div class="bg-indigo-600 text-white p-2 rounded-lg font-bold tracking-wider text-sm shadow-sm">3D</div>
+            <div>
+                <h1 class="text-lg font-semibold text-slate-800 tracking-tight">3D Archtech Workspace</h1>
+                <p class="text-xs text-slate-500 font-medium">Enterprise AI Sales Framework & Prompt Library</p>
+            </div>
+        </div>
+        <div class="flex items-center space-x-4">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+                <span class="h-1.5 w-1.5 rounded-full bg-emerald-500"></span> Standard English Mode
+            </span>
+        </div>
+    </header>
+
+    <div class="flex-1 flex overflow-hidden">
+        
+        <aside class="w-96 border-r border-slate-200 bg-white flex flex-col shrink-0 overflow-hidden">
+            <div class="p-4 border-b border-slate-100 space-y-3 bg-slate-50/70">
+                <div class="relative">
+                    <input type="text" id="searchInput" oninput="filterPrompts()" placeholder="Search templates or objectives..." 
+                           class="w-full pl-9 pr-4 py-2 text-sm bg-white border border-slate-200 rounded-lg focus:outline-hidden focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all shadow-xs" />
+                    <span class="absolute left-3 top-2.5 text-slate-400">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                    </span>
+                </div>
+                <div class="flex gap-1.5 overflow-x-auto pb-1" id="categoryTabs">
+                    <button onclick="filterCategory('All')" id="tab-All" class="px-3 py-1 text-xs font-semibold rounded-full bg-indigo-600 text-white shadow-xs cursor-pointer transition-all">All</button>
+                    <button onclick="filterCategory('Strategy')" id="tab-Strategy" class="px-3 py-1 text-xs font-semibold rounded-full bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 cursor-pointer transition-all">Strategy</button>
+                    <button onclick="filterCategory('Execution')" id="tab-Execution" class="px-3 py-1 text-xs font-semibold rounded-full bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 cursor-pointer transition-all">Execution</button>
+                    <button onclick="filterCategory('Client')" id="tab-Client" class="px-3 py-1 text-xs font-semibold rounded-full bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 cursor-pointer transition-all">Client</button>
+                </div>
+            </div>
+            
+            <div class="flex-1 overflow-y-auto divide-y divide-slate-100" id="promptList">
+                </div>
+        </aside>
+
+        <main class="flex-1 flex overflow-hidden bg-slate-50">
+            
+            <section class="w-1/2 p-6 overflow-y-auto flex flex-col border-r border-slate-200 bg-white">
+                <div class="mb-6">
+                    <span id="metaCategory" class="text-xs font-bold uppercase tracking-wider text-indigo-600 bg-indigo-50 px-2.5 py-1 rounded-md">Category</span>
+                    <h2 id="metaTitle" class="text-xl font-bold text-slate-800 mt-2.5 leading-snug">Use Case Title</h2>
+                </div>
+                
+                <hr class="border-slate-200 mb-6">
+
+                <div class="flex-1">
+                    <h3 class="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-2">
+                        <svg class="w-4 h-4 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                        Context Variables & Parameters
+                    </h3>
+                    <div id="dynamicInputs" class="space-y-4">
+                        </div>
+                </div>
+            </section>
+
+            <section class="w-1/2 p-6 flex flex-col overflow-hidden bg-slate-900 text-slate-100">
+                <div class="flex items-center justify-between pb-4 border-b border-slate-800 shrink-0">
+                    <div class="flex items-center space-x-2">
+                        <span class="flex h-2 w-2 relative">
+                            <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                            <span class="relative inline-flex rounded-full h-2 w-2 bg-indigo-500"></span>
+                        </span>
+                        <h3 class="text-sm font-semibold tracking-wide text-slate-300 uppercase">Live Compiled Prompt Preview</h3>
+                    </div>
+                    <div class="flex space-x-2">
+                        <button onclick="copyRawPrompt()" class="px-3 py-1.5 text-xs font-medium bg-slate-800 hover:bg-slate-700 text-slate-300 rounded-md border border-slate-700 transition-all flex items-center gap-1 cursor-pointer">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7v8a2 2 0 002 2h6a2 2 0 002-2V7a2 2 0 00-2-2h-6a2 2 0 00-2 2z"></path></svg>
+                            Copy Base
+                        </button>
+                        <button onclick="copyFilledPrompt()" class="px-3 py-1.5 text-xs font-semibold bg-indigo-600 hover:bg-indigo-500 text-white rounded-md transition-all flex items-center gap-1 shadow-md cursor-pointer">
+                            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                            Copy Compiled Prompt
+                        </button>
+                    </div>
+                </div>
+
+                <div class="flex-1 overflow-y-auto mt-4 p-4 bg-slate-950 rounded-xl border border-slate-800 text-sm leading-relaxed font-mono whitespace-pre-wrap select-text text-slate-300 tracking-normal" id="promptPreview">
+                    </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script>
+        // Structured English Prompt Dataset Matrix
+        const promptDataset = [
+            {
+                id: 1,
+                category: "Execution",
+                useCase: "Develop Custom Proposal from Templates",
+                title: "Develop a new proposal by leveraging the existing proposal templates.",
+                template: `Role:
+You are a Senior AI Sales Consultant who supports B2B Sales teams in digital solutions, 3D visualization, AR/VR, web/app development, and technology consulting. Your task is to create a strong and persuasive proposal based on existing proposals, client information, and specific business goals.
+
+Inputs:
+Industry: [INDUSTRY]
+Pain Points: [PAIN POINTS]
+Business Goals: [BUSINESS GOALS]
+Proposed Services: [SERVICES]
+Existing Proposal Context: [OLD PROPOSAL]
+Relevant Case Studies: [CASE STUDIES]
+
+Requirements:
+1. Understand the client’s business logic and core needs.
+2. Adjust the value proposition to fit the industry context natively.
+3. Focus intensively on structural business impact instead of only detailing technical specifications.
+4. Highlight real execution risks and baseline assumptions that need critical verification.
+
+Output:
+A comprehensive sales proposal including: Cover Page, Company & Team Overview, Project Overview, Challenge vs. Solution Mapping Table, Detailed Features Breakdown, Implementation Process Roadmap, Scope of Application, and Expected Quantifiable Results.`
+            },
+            {
+                id: 2,
+                category: "Strategy",
+                useCase: "Target Customer Persona Analysis",
+                title: "Analyze the target customer persona to extract underlying operational drivers.",
+                template: `Role:
+You are an AI Business Strategy Consultant specializing in B2B customer analysis. Your task is to build a deep, multidimensional, and strategic customer profile.
+
+Inputs:
+Industry & Company Type: [INDUSTRY]
+Company Size & Profile Data: [COMPANY SIZE]
+Information Baseline: [CUSTOMER INFORMATION]
+Pain Points & Business Goals: [PAIN POINTS]
+Strategic Objectives: [BUSINESS GOALS]
+
+Requirements:
+1. Identify hidden operational pain points and deep-seated core decision drivers.
+2. Clearly define corporate risks and the key performance indicators (KPIs) the client stakeholders defend.
+3. Strategically predict probable operational objections and hidden internal stakeholder alignment dynamics.
+4. Explicitly distinguish between stated surface needs and actual real operational requirements.
+
+Output:
+A modern corporate customer profile analysis containing: Overview & Executive Context, Primary Challenges, Hidden Pain Points, Structural Business Priorities, Risk Concerns & Barriers, Buying Vectors & Drivers, Critical Potential Objections, and Suggested Consultative Sales Approaches.`
+            },
+            {
+                id: 3,
+                category: "Strategy",
+                useCase: "Sales Pitch & Demo Framework Design",
+                title: "Develop a professional presentation structure for a product demo or sales pitch.",
+                template: `Role:
+You are a Senior AI Sales Consultant & Solution Strategist. Your task is to design a targeted presentation or interactive product demo framework that maps solution capabilities explicitly to quantified business value, systemic urgency, and concrete ROI.
+
+Input:
+Customer Information & Audience Demographics: [INDUSTRY]
+Target Audience Seniority: [AUDIENCE]
+Pain Points & Business Goals: [PAIN POINTS]
+Strategic Metrics: [BUSINESS GOALS]
+Solution Alignment & Core Services: [SERVICES]
+Unique Value Proposition (USP): [UNIQUE VALUE]
+Presentation Duration: [DURATION]
+Delivery Format: [ONLINE/OFFLINE]
+
+Requirements:
+1. Dynamically tailor linguistic and presentation complexity relative to the technical and business maturity of the audience.
+2. Anchor delivery on deep business storytelling and actual solution impact rather than dry feature enumeration.
+3. Strategically inject emotional trust touchpoints or functional parameters establishing clear urgency.
+4. Systematically anticipate and dismantle critical business objections directly inside presentation sequences.
+
+Output:
+An optimized Pitch/Demo architectural framework detailing: Executive Summary, Target Audience Persona Map, Core Business Context, Problem Definition Framework, Solution Strategic Positioning, Scripted Demo Journey Scenarios, Narrative Storytelling Flow, Trust-building Credibility Blocks, and a High-Conversion Call to Action (CTA) flow.`
+            },
+            {
+                id: 4,
+                category: "Client",
+                useCase: "Technical Translation for Customers",
+                title: "Explain industry-specific technical terms in a clear and easy-to-understand manner.",
+                template: `Role:
+You are a Senior Technical Consultant & AI Sales Engineer. Your core mission is to decode highly complex engineering and technical concepts into lucid, business-oriented terms mapped directly to the listener's structural context.
+
+Input:
+Target Technical Term: [TERM]
+Operational Context: [CONTEXT]
+Target Vertical Industry: [INDUSTRY]
+Audience Persona & Role: [AUDIENCE]
+Communication Goal: [GOAL]
+
+Requirements:
+1. Strictly avoid academic or dictionary definitions; prioritize operational meaning relative to customer operations.
+2. Seamlessly translate purely technical elements into real business value, financial impacts, or efficiency gains.
+3. Anchor explanations on concrete real-world operational examples and explicitly distinguish them from easily confused alternative terms.
+4. Keep definitions hyper-concise and conversational, perfectly engineered for active verbal client navigation.
+
+Output:
+A functional business explanation document incorporating: Executive Definition, Business-Translated Explanation, Strategic Operational Importance, Concrete Real-World Analogy, Systemic Workflow Mechanics (Simplified), and Common Strategic Industry Use Cases.`
+            },
+            {
+                id: 5,
+                category: "Strategy",
+                useCase: "Competitor Intelligence Mapping",
+                title: "Conduct competitor analysis to identify key differentiators and market positioning.",
+                template: `Role:
+You are a Senior AI Business Strategy Consultant specializing in Competitive Intelligence. Your focus is to map competitor landscapes to extract distinct competitive edge vectors and value positioning models for deployment by active sales forces.
+
+Input:
+Our Company Capabilities: [YOUR COMPANY]
+Current Unique Selling Proposition (USP): [CURRENT USP]
+Industry Vertical: [INDUSTRY]
+Core Solution Offerings: [CORE SERVICES]
+Primary Competitors: [COMPETITORS]
+Target Market Coordinates: [TARGET MARKET]
+
+Requirements:
+1. Conduct an empirical analysis mapping both actual market positioning against subjective client perception vectors.
+2. Isolate addressable, underserved market gaps that competitors fail to execute effectively.
+3. Systematically dissect and separate competitor 'marketing promises' from actual executable advantages.
+4. Formulate precise solution packaging and value framing architectures to effectively bypass generic price wars.
+
+Output:
+A comprehensive competitive intelligence dossier detailing: Market Landscape Map, Competitor Strategic Positioning Matrix, Granular Strengths & Weaknesses Analysis, Buyer Market Perception Vectors, Recommended Structural Differentiation Blueprint, Defensible Value Positioning Statement, and Immediate Tactical Sales Execution Steps.`
+            },
+            {
+                id: 6,
+                category: "Client",
+                useCase: "Post-Meeting Consultation Follow-Up",
+                title: "Draft a professional follow-up email or message after a consultation or demo.",
+                template: `Role:
+You are a Senior B2B Sales Consultant specializing in client communication architecture. Your task is to design fluent, highly persuasive, and natural multi-channel follow-up copy built to preserve project momentum and establish deep institutional trust.
+
+Input:
+Follow-up Class & Context: [FOLLOW-UP TYPE]
+Target Channel: [EMAIL/ZALO/LINKEDIN]
+Meeting Summary: [MEETING SUMMARY]
+Validated Pain Points: [PAIN POINTS]
+Proposed Architecture: [SOLUTION]
+Encountered Objections: [OBJECTIONS]
+Target Next Action Step: [DESIRED NEXT STEP]
+Communications Tone: [TONE]
+
+Requirements:
+1. Ensure hyper-personalization mapping back to specific micro-discussions within the conversation transcript.
+2. Double down on reinforcing core structural value within the explicit business context of the client.
+3. Elegantly resolve and mitigate outstanding reservations, hesitations, or pricing friction seamlessly.
+4. Retain an action-oriented, crisp, consultative signature optimized for professional interaction.
+
+Output:
+A complete communications suite consisting of: Optimized Subject Line Variations, Communication Strategy Framework, Condensed C-Suite Summary Variation, Advisory/Consultative Body Copy, Strategic Objection Handling Variation, and Data-Driven Dispatch Timing Recommendations.`
+            },
+            {
+                id: 7,
+                category: "Execution",
+                useCase: "Meeting Notes to Action Item Pipeline",
+                title: "Convert raw meeting notes into structured action plans with clear ownership.",
+                template: `Role:
+You are a Senior Project Coordinator. Your mission is to ingest messy, unstructured meeting data or transcripts and distill them into an actionable, professional roadmap with absolute ownership metrics and hard timelines.
+
+Input:
+Unstructured Meeting Notes/Transcript: [MEETING NOTES]
+Meeting Type & Context: [MEETING TYPE]
+Session Participants: [PARTICIPANTS]
+Core Deliverable Targets: [MEETING GOAL]
+Overall Project Timeline: [PROJECT TIMELINE]
+
+Requirements:
+1. Isolate and validate tasks that are inherently executable, separating speculative talk from definitive tasks.
+2. Allocate absolute owners to each item and assign data-driven priority levels.
+3. Clear flag upstream/downstream operational dependencies and cross-functional risks.
+4. Explicitly categorize elements into: Decided Frameworks, Explored Discussions, and Imminent Action Items.
+
+Output:
+A highly structured operational action plan including: Key Strategic Decisions Matrix, Open Unresolved Questions Tracker, Prioritized Action Item Registry, Explicit Individual Owners, Suggested Critical Deadlines, Cross-functional Risk Registers, and Strategic Agendas for Next Iteration Meetings.`
+            },
+            {
+                id: 8,
+                category: "Strategy",
+                useCase: "Core Customer Need Extraction",
+                title: "Identify and analyze core customer needs within a specific business domain.",
+                template: `Role:
+You are a Senior Business Strategy Consultant & Customer Insight Analyst. Your objective is to extract latent customer needs, systemic buying drivers, and silent risk avoidance parameters inside target operational landscapes.
+
+Input:
+Industry & Vertical Layout: [INDUSTRY]
+Target Customer Profiles: [TARGET CUSTOMERS]
+Proposed Product/Service Engine: [PRODUCT/SERVICE]
+Recognized Industry Inefficiencies: [KNOWN ISSUES]
+Current Alternative Workarounds: [ALTERNATIVES]
+
+Requirements:
+1. Systematically isolate superficial surface requests from deep structural enterprise workflows and real needs.
+2. Analyze structural buyer psychology, purchasing decision logic, and procurement frameworks.
+3. Identify operational friction, internal adoption barriers, and real financial budget elasticities.
+4. Output actionable strategic insights engineered for rapid configuration by sales and product positioning teams.
+
+Output:
+A strategic deep-dive document highlighting: Structural Industry Context, Decision-Maker Authority Maps, Core Foundational Needs Framework, Internal Operational Pain Points, Emotional and Political Career Drivers, Market Opportunity Gaps, and Recommended Value-Messaging Frameworks.`
+            },
+            {
+                id: 9,
+                category: "Client",
+                useCase: "Objection Handling Strategy",
+                title: "Identify and analyze common customer objections when presenting solutions.",
+                template: `Role:
+You are a Senior Sales Strategy Consultant specializing in buyer psychology and corporate purchasing logic. Your task is to perform an architectural breakdown of buyer objections to expose root causes and build conversion blueprints.
+
+Input:
+Solution Profile: [PRODUCT]
+Target Customer Cohort: [TARGET CUSTOMERS]
+Documented Friction/Objections: [KNOWN OBJECTIONS]
+Current Sales Pipeline Stage: [SALES STAGE]
+
+Requirements:
+1. Map out structural psychological and organizational roots behind every voice of resistance.
+2. Clearly isolate real systemic buying barriers from superficial surface-level smoke screens or politeness.
+3. Outline responsive navigation methodologies rooted in consultative and solution-oriented advisory models.
+4. Map subtle verification signals indicating deep client interest despite explicit programmatic pushback.
+
+Output:
+An advanced objection blueprint detailing: Buyer Psychology Mapping, Key Objection Root-Cause Diagnostics, Trust & Security Barriers, Consultative Mitigation Strategies, and Realistic Sales Dialog Scripts.`
+            },
+            {
+                id: 10,
+                category: "Execution",
+                useCase: "Solution Matrix & Service Recommendation",
+                title: "Recommend suitable services based on customer needs and business goals.",
+                template: `Role:
+You are a Senior Solution Consultant. Your role is to function as a consultative trusted advisor mapping technical ecosystems explicitly to measurable corporate performance indicators.
+
+Input:
+Client Vertical: [INDUSTRY]
+Enterprise Scale: [COMPANY SIZE]
+Core Pain Points: [PAIN POINTS]
+Stated Business Targets: [BUSINESS GOALS]
+Target Budget Allocation: [BUDGET]
+Project Delivery Horizon: [TIMELINE]
+
+Requirements:
+1. Perform a granular root-cause exploration on enterprise challenges prior to suggesting catalog items.
+2. Prioritize project rollouts based on cross-referencing business impact with absolute engineering feasibility.
+3. Draw clear boundaries isolating core non-negotiable foundations from auxiliary feature extensions.
+4. Architecture multi-phased deployment pathways to accommodate financial and organizational bandwidth.
+
+Output:
+A Solution Recommendation Document detailing: Business Environment Baseline, Strategic Priority Assessment, Core Service Matrix Mapping, Quantified Business Impact Expectations, Phased Implementation Milestones, Structural ROI Projections, and Risk/Assumption Controls.`
+            },
+            {
+                id: 11,
+                category: "Client",
+                useCase: "Early-Stage Consideration Friction Analysis",
+                title: "Analyze potential customer barriers and friction during early-stage brand engagement.",
+                template: `Role:
+You are a Senior Customer Insight Strategist. Your mission is to locate psychological and friction vectors stalling target clients inside the initial consideration phases of the conversion funnel.
+
+Input:
+Product/Service Class: [PRODUCT]
+Target Customer Segments: [TARGET CUSTOMERS]
+Current Market Positioning: [POSITIONING]
+Inbound/Outbound Perceptions: [PERCEPTIONS]
+Current Go-To-Market Challenges: [CURRENT CHALLENGES]
+
+Requirements:
+1. Map early-stage customer psychology and discovery frames across original interaction points.
+2. Uncover implicit trust boundaries and systemic switching anxiety dynamics tied to replacing status-quo platforms.
+3. Diagnose real operational reasons driving customer outreach avoidance or communication silence.
+4. Formulate low-friction outreach strategies designed to reduce psychological and procedural resistance.
+
+Output:
+A comprehensive insight diagnostic mapping: Early-Stage Buying Mindset, Primary Trust Hurdles, Hidden Operational Hesitations, Strategic Perception Gaps, Low-Friction Engagement Frameworks, and Immediately Deployable Communication Protocols.`
+            },
+            {
+                id: 12,
+                category: "Strategy",
+                useCase: "Industry Innovation Factor Identification",
+                title: "Identify industry innovation factors most likely to generate client engagement.",
+                template: `Role:
+You are a Senior Innovation Strategy Consultant. Your mission is to isolate high-leverage technological and architectural innovation drivers capable of sparking immediate engagement and pipeline generation.
+
+Input:
+Industry Vertical: [INDUSTRY]
+Active Market Macro Trends: [MARKET TRENDS]
+Target Decision-Makers: [TARGET CUSTOMERS]
+Core Stakeholder Pain Points: [PAIN POINTS]
+Identified Leadership Targets: [DECISION MAKERS]
+Focused Innovation Arena: [INNOVATION AREA]
+
+Requirements:
+1. Enforce a strict distinction separating novel 'hype technology' from genuine business-valuable architectural innovations.
+2. Isolate foundational emotional and strategic drivers that trigger executive engagement and focus.
+3. Map core competitive variables that evoke genuine strategic urgency or market-share displacement fears (FOMO).
+4. Evaluate practical organizational tech-adoption thresholds and structural readiness of target markets.
+
+Output:
+A specialized Innovation Framework covering: Industry Technological Landscape, Top High-Leverage Engagement Drivers, Hype vs. Tangible Enterprise Value Dissection, Communications Messaging Hooks, and Innovation-Focused Value Positioning Models.`
+            },
+            {
+                id: 13,
+                category: "Strategy",
+                useCase: "Predictive Demand & Customer Drift Forecasting",
+                title: "Predict changes in customer needs to adapt ahead of market competitors.",
+                template: `Role:
+You are a Senior Market Intelligence Consultant. Your task is to perform analytical forecasting on impending shifts in buyer behaviors and operational goals to command early first-mover advantages.
+
+Input:
+Target Industry Segment: [INDUSTRY]
+Current Consumer/Enterprise Trajectories: [CURRENT BEHAVIOR]
+Emerging Disruption Triggers: [EMERGING FACTORS]
+Corporate Strategic Horizon: [STRATEGIC GOAL]
+Target Timeline: [TIMEFRAME]
+
+Requirements:
+1. Rigorously separate temporary cyclical market noise from long-term secular and structural business paradigm transformations.
+2. Identify emerging, unvoiced demands that have no current viable market solutions.
+3. Trace how competitor behaviors and shifting alternative options modify background buyer baselines.
+4. Architect concrete strategic preparation maneuvers to insulate and position the company ahead of trend maturation.
+
+Output:
+A forward-looking demand intelligence report presenting: Market Evolution Vectors, Behavioral Drift Mapping, Unmet Needs Forecasting, Disruption & Displacement Risk Indexes, Future Scenario Modeling, and Strategic Readiness Playbooks.`
+            },
+            {
+                id: 14,
+                category: "Execution",
+                useCase: "Feature-to-Benefit Value Translation",
+                title: "Translate complex technical features into clear business benefits for executives.",
+                template: `Role:
+You are a Senior Technical Sales Translator. Your core competency is building clear bridges between deep engineering parameters and the language of C-suite executive priorities.
+
+Input:
+Product Platform: [PRODUCT]
+Technical Specifications: [TECHNICAL FEATURES]
+Executive Target Persona: [AUDIENCE]
+Corporate Roadblocks: [PAIN POINTS]
+Sales Conversation Setting: [SALES CONTEXT]
+
+Requirements:
+1. Transmute raw technical variables cleanly into structural business outcomes, fiscal savings, or speed advantages.
+2. Build unambiguous justifications mapping features straight to cost controls, resource optimization, risk management, or client growth.
+3. Deploy elegant business-case analogies to make multi-faceted technical items instantly plain.
+4. Anchor discussions strictly on features resolving verified pain points on the current client dossier.
+
+Output:
+An executive value translation matrix including: Buyer Persona Focus Mapping, Granular Feature-to-Benefit Matching Grid, C-Suite Boardroom Level Talking Points, Non-Technical Communication Frameworks, and Strategic Operational Metaphors.`
+            },
+            {
+                id: 15,
+                category: "Strategy",
+                useCase: "Alternative-Market Positioning Strategy",
+                title: "Suggest service positioning strategies against alternative market options.",
+                template: `Role:
+You are a Senior B2B Positioning Strategist. Your mission is to define a distinct space within customer mental frameworks to maximize perceived value and protect margin structures against standard pricing degradation.
+
+Input:
+Service Architecture: [SERVICE]
+Core Enterprise Superpowers: [UNIQUE STRENGTHS]
+Market Competitors: [COMPETITORS]
+Alternative Workarounds: [ALTERNATIVES]
+Current Background Market Consensus: [MARKET PERCEPTION]
+
+Requirements:
+1. Decipher empirical buyer market maps and locate common perception biases within active buying circles.
+2. Expose differentiation pathways based on practical operational advantages rather than shallow marketing declarations.
+3. Formulate messaging models emphasizing institutional expertise, quality delivery, and operational reliability.
+4. Construct defensive positioning moats that are structurally complex or resource-heavy for alternatives to quickly mimic.
+
+Output:
+A value-positioning blueprint including: Buyer Perception Architecture Map, Objective Multi-Variable Differentiation Matrix, Core Defensive Positioning Statement, Perceived Value Optimization Playbook, and Multi-Angle Messaging Matrices.`
+            },
+            {
+                id: 16,
+                category: "Execution",
+                useCase: "Discovery Brief to System Requirements Discovery",
+                title: "Convert raw client briefs into preliminary functional requirements analysis.",
+                template: `Role:
+You are a Senior Business Analyst & Solution Discovery Consultant. Your role is to unpack unstructured, scattered discovery inputs and assemble them into standard, structured technical blueprints for implementation scoping.
+
+Input:
+Raw Discovery Notes / Meeting Content: [CLIENT BRIEF]
+Client Business Strategy: [BUSINESS GOALS]
+Primary Friction Point: [PAIN POINTS]
+Requested App/Platform Features: [REQUESTED FEATURES]
+
+Requirements:
+1. Trace user feature requests to isolate the underlying operational problem they seek to solve.
+2. Define boundary metrics for initial project scopes and clarify explicit design constraints.
+3. Methodically identify analytical data gaps, hidden information black holes, and required client clarifications.
+4. Provide immediate high-level engineering complexity profiles and execution risk assessments.
+
+Output:
+An engineering-ready discovery report detailing: Client Business Model Core, Feature-to-Objective Strategic Alignment Table, Preliminary Solution Scope Coordinates, Core Functional Requirements Architecture, Baseline Execution Assumptions & Risks, and a Comprehensive Client Clarification Questionnaire.`
+            }
+        ];
+
+        let selectedPromptId = 1;
+        let activeCategory = 'All';
+
+        // Initialize Workspace Application
+        function initApp() {
+            renderPromptList();
+            selectPrompt(selectedPromptId);
+        }
+
+        // Render Sidebar List DOM Elements
+        function renderPromptList() {
+            const container = document.getElementById('promptList');
+            const searchVal = document.getElementById('searchInput').value.toLowerCase();
+            container.innerHTML = '';
+
+            const filtered = promptDataset.filter(p => {
+                const matchesSearch = p.title.toLowerCase().includes(searchVal) || 
+                                      p.useCase.toLowerCase().includes(searchVal) || 
+                                      p.template.toLowerCase().includes(searchVal);
+                const matchesCategory = activeCategory === 'All' || p.category === activeCategory;
+                return matchesSearch && matchesCategory;
+            });
+
+            if (filtered.length === 0) {
+                container.innerHTML = `<div class="p-8 text-center text-sm text-slate-400 font-medium">No prompt models match criteria</div>`;
+                return;
+            }
+
+            filtered.forEach(p => {
+                const isSelected = p.id === selectedPromptId;
+                const card = document.createElement('div');
+                card.className = `p-4 cursor-pointer transition-all border-l-4 ${isSelected ? 'bg-indigo-50/70 border-indigo-600' : 'border-transparent hover:bg-slate-50'} flex flex-col space-y-2`;
+                card.onclick = () => selectPrompt(p.id);
+                
+                // Set explicit color badges per metadata classification
+                let badgeColor = "bg-slate-100 text-slate-700";
+                if(p.category === "Strategy") badgeColor = "bg-amber-50 text-amber-700 border border-amber-200";
+                if(p.category === "Execution") badgeColor = "bg-sky-50 text-sky-700 border border-sky-200";
+                if(p.category === "Client") badgeColor = "bg-purple-50 text-purple-700 border border-purple-200";
+
+                card.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <span class="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm ${badgeColor}">${p.category}</span>
+                        <span class="text-[11px] font-mono text-slate-400">ID: #0${p.id}</span>
+                    </div>
+                    <h4 class="text-sm font-semibold text-slate-800 leading-tight">${p.useCase}</h4>
+                    <p class="text-xs text-slate-500 line-clamp-2 leading-relaxed">${p.title}</p>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // Handle Active Selection Shifts
+        function selectPrompt(id) {
+            selectedPromptId = id;
+            const promptObj = promptDataset.find(p => p.id === id);
+            if (!promptObj) return;
+
+            // Paint Metadata Header
+            document.getElementById('metaCategory').innerText = promptObj.category;
+            document.getElementById('metaTitle').innerText = promptObj.title;
+
+            // Re-render structural navigation adjustments
+            const cards = document.getElementById('promptList').children;
+            renderPromptList();
+
+            // Auto-detect bracket configurations inside prompt model text via regex parsing
+            const variableRegex = /\[([A-Z0-9_\s&/]+)\]/g;
+            let match;
+            const uniqueVariables = new Set();
+            
+            while ((match = variableRegex.exec(promptObj.template)) !== null) {
+                uniqueVariables.add(match[1]);
+            }
+
+            // Build Dynamic Input Elements DOM Layout
+            const inputContainer = document.getElementById('dynamicInputs');
+            inputContainer.innerHTML = '';
+
+            if (uniqueVariables.size === 0) {
+                inputContainer.innerHTML = `<p class="text-xs text-slate-400 italic">No variables required for this structural model.</p>`;
+            } else {
+                uniqueVariables.forEach(variable => {
+                    const formGroup = document.createElement('div');
+                    formGroup.className = "flex flex-col space-y-1.5";
+                    
+                    formGroup.innerHTML = `
+                        <label class="text-xs font-bold text-slate-700 uppercase tracking-wide flex items-center justify-between">
+                            <span>${variable}</span>
+                            <span class="text-[10px] text-slate-400 font-normal normal-case">Inject target values</span>
+                        </label>
+                        <textarea data-var="[${variable}]" oninput="compileLivePrompt()" placeholder="Enter details for [${variable}]..." 
+                                  rows="2" class="w-full text-sm px-3 py-2 bg-slate-50 border border-slate-200 rounded-lg focus:outline-hidden focus:bg-white focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 transition-all font-sans resize-none"></textarea>
+                    `;
+                    inputContainer.appendChild(formGroup);
+                });
+            }
+
+            compileLivePrompt();
+        }
+
+        // Real-Time Compilation Engine
+        function compileLivePrompt() {
+            const promptObj = promptDataset.find(p => p.id === selectedPromptId);
+            if (!promptObj) return;
+
+            let compiledText = promptObj.template;
+            const inputs = document.querySelectorAll('#dynamicInputs textarea');
+            
+            inputs.forEach(input => {
+                const targetPlaceholder = input.getAttribute('data-var');
+                const userText = input.value.trim();
+                
+                if (userText) {
+                    // Replace variables globally safely
+                    compiledText = compiledText.split(targetPlaceholder).join(userText);
+                }
+            });
+
+            // Handle visual markup highlights for remaining unfulfilled values
+            const displayPanel = document.getElementById('promptPreview');
+            
+            // Clean HTML escaping to keep display safe
+            let securedHtml = compiledText
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;");
+
+            // Visually transform standard tracking tags for readability inside dashboard preview panel
+            securedHtml = securedHtml.replace(/(\[[A-Z0-9_\s&/]+\])/g, `<span class="bg-indigo-950 text-indigo-400 border border-indigo-800 px-1 rounded-sm font-bold">$1</span>`);
+
+            displayPanel.innerHTML = securedHtml;
+        }
+
+        // Sidebar Text Search Pipeline
+        function filterPrompts() {
+            renderPromptList();
+        }
+
+        // Category Tab Switch Control
+        function filterCategory(categoryName) {
+            activeCategory = categoryName;
+            
+            // Reset active styles across tabs
+            const tabs = document.querySelectorAll('#categoryTabs button');
+            tabs.forEach(t => {
+                t.className = "px-3 py-1 text-xs font-semibold rounded-full bg-white text-slate-600 border border-slate-200 hover:bg-slate-100 cursor-pointer transition-all";
+            });
+
+            // Target Selected Tab styling elements
+            const activeTab = document.getElementById(`tab-${categoryName}`);
+            if(activeTab) {
+                activeTab.className = "px-3 py-1 text-xs font-semibold rounded-full bg-indigo-600 text-white shadow-xs cursor-pointer transition-all";
+            }
+
+            renderPromptList();
+        }
+
+        // Copy Clipboard Utilities
+        function copyRawPrompt() {
+            const promptObj = promptDataset.find(p => p.id === selectedPromptId);
+            if (!promptObj) return;
+            navigator.clipboard.writeText(promptObj.template).then(() => {
+                showFeedbackPopup("Base structure copied to clipboard!");
+            });
+        }
+
+        function copyFilledPrompt() {
+            // Target compiled state text block contents directly without parsing localized DOM styles element injections
+            const promptObj = promptDataset.find(p => p.id === selectedPromptId);
+            if (!promptObj) return;
+
+            let compiledText = promptObj.template;
+            const inputs = document.querySelectorAll('#dynamicInputs textarea');
+            inputs.forEach(input => {
+                const targetPlaceholder = input.getAttribute('data-var');
+                const userText = input.value.trim();
+                if (userText) {
+                    compiledText = compiledText.split(targetPlaceholder).join(userText);
+                }
+            });
+
+            navigator.clipboard.writeText(compiledText).then(() => {
+                showFeedbackPopup("Compiled prompt ready for deployment!");
+            });
+        }
+
+        // Non-intrusive operational UI confirmation banner system
+        function showFeedbackPopup(msg) {
+            const banner = document.createElement('div');
+            banner.className = "fixed bottom-5 right-5 bg-slate-800 text-slate-100 px-4 py-2.5 rounded-xl shadow-xl text-xs font-medium border border-slate-700 tracking-wide z-50 animate-bounce flex items-center space-x-2";
+            banner.innerHTML = `
+                <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                <span>${msg}</span>
+            `;
+            document.body.appendChild(banner);
+            setTimeout(() => { banner.remove(); }, 2500);
+        }
+
+        // Initialize Core System Lifecycle
+        window.onload = initApp;
+    </script>
+</body>
+</html>
