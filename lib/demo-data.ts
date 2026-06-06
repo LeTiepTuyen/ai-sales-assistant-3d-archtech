@@ -62,28 +62,28 @@ export const sampleSources = [
     name: "Company profile 3D Archtech.pdf",
     type: "Company profile",
     status: "Pending ingestion",
-    chunks: "NEEDS_INPUT",
+    chunks: "To confirm",
     lastIngested: "Not ingested"
   },
   {
     name: "FarmDiaries_Proposal_3DArchtech.pdf",
     type: "Proposal",
     status: "Pending ingestion",
-    chunks: "NEEDS_INPUT",
+    chunks: "To confirm",
     lastIngested: "Not ingested"
   },
   {
     name: "Portfolio Digital Twin.pdf",
     type: "Portfolio",
     status: "Pending ingestion",
-    chunks: "NEEDS_INPUT",
+    chunks: "To confirm",
     lastIngested: "Not ingested"
   },
   {
     name: "[3D Archtech] Prompts for AI sales assistant.xlsx",
     type: "Prompt library",
     status: "Planning reviewed",
-    chunks: "NEEDS_INPUT",
+    chunks: "To confirm",
     lastIngested: "Not ingested"
   }
 ];
@@ -97,5 +97,5 @@ export const proposalSections = [
   "Implementation Process",
   "Scope of Application",
   "Expected Results",
-  "Risks, Assumptions, and NEEDS_INPUT"
+  "Risks, Assumptions, and Items to Confirm"
 ];

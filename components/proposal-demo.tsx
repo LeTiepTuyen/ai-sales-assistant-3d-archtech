@@ -268,7 +268,7 @@ export function ProposalDemo() {
             <div>
               <CardTitle>Proposal Preview</CardTitle>
               <CardDescription>
-                The draft is generated from local retrieval context and preserves `NEEDS_INPUT` markers.
+                The draft is generated from local retrieval context and keeps sales review notes visible.
               </CardDescription>
             </div>
             <div className="flex gap-2">
@@ -315,7 +315,7 @@ export function ProposalDemo() {
               </div>
               {proposal.needsInput.length > 0 ? (
                 <div className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
-                  <p className="font-semibold">NEEDS_INPUT</p>
+                  <p className="font-semibold">Sales Review Notes</p>
                   <ul className="mt-2 list-inside list-disc leading-6">
                     {proposal.needsInput.map((item) => (
                       <li key={item}>{item}</li>

@@ -19,6 +19,7 @@ yarn-error.log*
 pnpm-debug.log*
 *.tgz
 prompt-hub-*.png
+prompt-hub-*.md
 
 # Internal company materials - do not commit to public repo by default
 /data/source-pdfs/*

@@ -4,6 +4,7 @@ import { useMemo, useState } from "react";
 import { toast } from "sonner";
 import {
   AlertTriangle,
+  ArrowRight,
   Bookmark,
   BookOpenText,
   Braces,
@@ -141,7 +142,7 @@ export function PromptHubPage({ prompts }: PromptHubPageProps) {
   async function copyText(kind: "base" | "compiled", value: string) {
     await navigator.clipboard.writeText(value);
     setCopied(kind);
-    toast.success(kind === "base" ? "Base prompt copied" : "Compiled prompt copied");
+    toast.success(kind === "base" ? "Base prompt copied" : "Prompt ready to paste into Chat");
     window.setTimeout(() => setCopied(null), 1400);
   }
 
@@ -316,7 +317,7 @@ function PromptLibraryPanel({
 }) {
   return (
     <aside
-      className="prompt-hub-panel prompt-hub-library flex h-[520px] min-h-0 min-w-0 w-full max-w-full flex-col overflow-hidden border-border bg-[#f0f2f5]"
+      className="prompt-hub-panel prompt-hub-library flex h-[min(620px,calc(100dvh-12rem))] min-h-[460px] min-w-0 w-full max-w-full flex-col overflow-hidden border-border bg-[#f0f2f5] xl:h-full xl:min-h-0"
     >
       <div className="shrink-0 border-b border-border bg-card/95 p-3">
         <label className="flex h-11 min-w-0 items-center gap-2 rounded-md border border-border bg-white px-3 shadow-sm focus-within:border-primary/45 focus-within:ring-2 focus-within:ring-primary/10">
@@ -370,11 +371,10 @@ function PromptLibraryPanel({
         </span>
       </div>
 
-      <Command shouldFilter={false} className="min-h-0 min-w-0 flex-1 bg-transparent">
-        <CommandList className="max-h-none min-h-0 flex-1 overflow-hidden">
+      <Command shouldFilter={false} className="flex min-h-0 min-w-0 flex-1 flex-col bg-transparent">
+        <CommandList className="h-full max-h-none min-h-0 flex-1 overflow-y-auto overflow-x-hidden pr-1">
             {filteredPrompts.length ? (
-              <CommandGroup className="h-full p-0">
-                <ScrollArea className="h-full">
+              <CommandGroup className="min-h-full overflow-visible p-0">
                   <div className="flex min-w-0 flex-col gap-2 p-3">
                     {filteredPrompts.map((prompt, index) => {
                       const active = prompt.id === selectedId;
@@ -451,7 +451,6 @@ function PromptLibraryPanel({
                       );
                     })}
                   </div>
-                </ScrollArea>
               </CommandGroup>
             ) : (
               <CommandEmpty>
@@ -671,6 +670,11 @@ function PromptPreviewPanel({
 }) {
   const rows = Math.min(lineCount(compiledPrompt), 160);
 
+  function useInChat() {
+    window.localStorage.setItem("promptHubDraftForChat", compiledPrompt);
+    window.location.href = "/chat?from=prompts";
+  }
+
   return (
     <section
       className="prompt-hub-panel relative flex h-[680px] min-h-0 min-w-0 w-full max-w-full flex-col overflow-hidden bg-[#101115] text-white"
@@ -749,11 +753,20 @@ function PromptPreviewPanel({
             ) : (
               <Clipboard className="h-4 w-4" />
             )}
-            Copy Compiled Prompt
+            Copy for Chat
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            className="h-auto min-h-10 min-w-0 whitespace-normal border-white/15 bg-white/[0.03] px-3 text-center leading-5 text-white hover:bg-white/10 hover:text-white"
+            onClick={useInChat}
+          >
+            <ArrowRight className="h-4 w-4" />
+            Use in Chat
           </Button>
         </div>
         <p className="mt-3 text-center text-xs leading-5 text-white/38">
-          Compiled with current context variables. Edits update in real time.
+          Fill variables, review the compiled prompt, then copy or send it to Chat.
         </p>
       </div>
     </section>

@@ -1,169 +1,332 @@
-# Deployment Plan
+# Public Deployment Plan
 
 Project: AI Sales Assistant for 3D Archtech  
-Version: 1.0  
-Date: 2026-06-05  
-Status: Local demo prepared; public deployment not yet approved
+Version: 2.0  
+Date: 2026-06-06  
+Status: Approved target path for a public classroom demo using Vercel + Supabase pgvector on free tiers
 
-## 1. Deployment Goal
+## 1. Deployment Decision
 
-The project should run locally first and only move to a public demo after source handling, environment variables, and cost controls are confirmed.
-
-The public deployment should demonstrate the app interface and core flows without exposing internal source files or API keys.
-
-## 2. Local-First Plan
-
-Local development should be the default:
-
-1. Build the Next.js MVP.
-2. Store raw source files in `data/source-pdfs/`.
-3. Store processed local outputs in `data/extracted/` and `data/chunks/`.
-4. Configure environment variables in `.env.local`.
-5. Run ingestion locally.
-6. Test chat, proposal generation, admin data sources, and export.
-7. Confirm the demo script works before deployment.
-
-## 3. Environment Variables
-
-Expected variables:
+The selected deployment option is:
 
 ```text
-GOOGLE_GENERATIVE_AI_API_KEY=NEEDS_INPUT
+Vercel Hobby
+  + Next.js App Router frontend and API routes
+  + Google Gemini API Free Tier for generation and embeddings when quota allows
+  + Supabase Free Plan Postgres with pgvector for deployed RAG retrieval
+```
+
+This is the best fit for a short university demo because it gives the class a public URL, keeps the Next.js app on a platform designed for this stack, and provides persistent retrieval data without running a custom server.
+
+This plan is not a production launch plan. It is a controlled public demo plan for approximately 1-5 classroom users.
+
+## 2. Cost Target
+
+Target cost: `USD 0`.
+
+The deployment must remain free by following these constraints:
+
+- Use a personal/non-commercial Vercel Hobby project.
+- Use the default `*.vercel.app` domain, not a purchased custom domain.
+- Use a Supabase Free Plan organization/project with no paid add-ons.
+- Do not enable Supabase Pro, branching, read replicas, PITR, custom domains, log drains, IPv4 add-ons, or upgraded compute.
+- Use Gemini Free Tier only. Do not link or use a paid Gemini billing project unless explicitly approved.
+- Keep the classroom dataset within free-tier limits and upload the full approved processed chunk set needed to reproduce the local demo experience, not raw PDFs/XLSX.
+- Avoid load testing, public sharing beyond the class, bots, or open-ended usage after the demo.
+
+Free-tier references checked on 2026-06-06:
+
+- Vercel Hobby is free for personal projects and small-scale applications, with included function and compute usage: `https://vercel.com/docs/plans/hobby`
+- Vercel pricing lists Hobby included compute/function quotas: `https://vercel.com/pricing`
+- Supabase Free Plan includes two free projects and free quotas such as 500 MB database size per project and 5 GB egress: `https://supabase.com/docs/guides/platform/billing-on-supabase`
+- Supabase says Free Plan usage is not charged; when quota is exceeded, usage is restricted rather than billed: `https://supabase.com/docs/guides/platform/cost-control#spend-cap`
+- Gemini API Free Tier provides limited free access for small projects: `https://ai.google.dev/gemini-api/docs/pricing`
+- Gemini billing tiers start on Free Tier for new accounts, subject to model-specific free rate limits: `https://ai.google.dev/gemini-api/docs/billing/`
+
+## 3. Current Fit Assessment
+
+The selected architecture is appropriate, but the current codebase is not yet fully deployed-RAG ready.
+
+Already prepared:
+
+- Next.js app routes and API routes exist.
+- Gemini generation is server-side and optional.
+- Local lexical retrieval works from `data/chunks/retrieval-index.json`.
+- Supabase pgvector schema exists at `docs/technical/supabase-pgvector-schema.sql`.
+- RLS is enabled in the prepared schema.
+- `match_rag_chunks(...)` RPC is prepared for server-side vector retrieval.
+- `.gitignore` excludes `.env.local`, raw source files, extracted text, and local chunks.
+
+Still required before public Vercel + Supabase pgvector deployment:
+
+- Add `@supabase/supabase-js` as an application dependency.
+- Add a server-only Supabase client utility.
+- Add an embedding provider behind a server-side API key.
+- Add a deployed ingestion path that writes the full approved local demo metadata, chunks, and embeddings to Supabase.
+- Add a retrieval mode that calls `match_rag_chunks(...)` from server-side API routes.
+- Keep local JSON retrieval as a fallback.
+- Add a smoke test that confirms deployed chat/proposal routes can retrieve Supabase-backed sources.
+- Re-run security checks to confirm no raw internal files or secrets are deployed.
+
+Therefore, the plan is optimized for the target, but it is not "configuration only." It requires a small backend integration work package before deployment.
+
+## 4. Deployment Architecture
+
+```text
+Classroom user browser
+  -> Vercel public URL
+  -> Next.js App Router pages
+  -> Next.js server API routes
+      -> Gemini API for response generation
+      -> Gemini embedding model for query/document embeddings when configured
+      -> Supabase Postgres + pgvector for approved RAG chunks
+  -> DOCX export API route
+  -> Print-friendly HTML for PDF-style export
+```
+
+Important boundary:
+
+- Browser code may receive only `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_ANON_KEY`.
+- Browser code must never receive `SUPABASE_SERVICE_ROLE_KEY`, Gemini keys, raw source files, extracted text dumps, or full internal chunk indexes.
+- Supabase RAG tables should not have public read policies for the MVP demo.
+- Retrieval should go through trusted server-side code.
+
+## 5. Environment Variables
+
+Configure these locally in `.env.local` and in Vercel Project Settings for `Production` and `Preview` if needed:
+
+```env
+GOOGLE_GENERATIVE_AI_API_KEY=<server-side Gemini key>
 GEMINI_MODEL=gemini-3.5-flash
-NEXT_PUBLIC_SUPABASE_URL=NEEDS_INPUT
-NEXT_PUBLIC_SUPABASE_ANON_KEY=NEEDS_INPUT
-SUPABASE_SERVICE_ROLE_KEY=NEEDS_INPUT
-ADMIN_DEMO_PASSWORD=NEEDS_INPUT
+GEMINI_EMBEDDING_MODEL=<approved embedding model>
+GEMINI_MAX_OUTPUT_TOKENS=8192
+
+NEXT_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<publishable-or-legacy-anon-key>
+SUPABASE_SERVICE_ROLE_KEY=<secret-or-legacy-service-role-key>
+
+ADMIN_DEMO_PASSWORD=<simple demo password if admin guard is implemented>
 NEXT_PUBLIC_APP_NAME=AI Sales Assistant for 3D Archtech
+RAG_BACKEND=supabase
 ```
 
-Supabase variables are only required if the deployed demo uses Supabase persistence. The Gemini key is optional for the local demo because the app has a local fallback mode. Real API keys must be stored in `.env.local` or deployment secrets, not in `.env.example`. The app reads `GOOGLE_GENERATIVE_AI_API_KEY` first, then `GEMINI_API_KEY` or `GOOGLE_API_KEY` for compatibility with Gemini API documentation.
+Notes:
 
-## 4. Public Demo Options
+- `GOOGLE_GENERATIVE_AI_API_KEY`, `GEMINI_EMBEDDING_MODEL`, `GEMINI_MAX_OUTPUT_TOKENS`, `SUPABASE_SERVICE_ROLE_KEY`, and `ADMIN_DEMO_PASSWORD` are server-side settings.
+- `NEXT_PUBLIC_*` variables are browser-visible by design.
+- `RAG_BACKEND=supabase` should select deployed Supabase retrieval after the code path exists.
+- If Gemini fails or quota is exhausted during the demo, the app should fall back to local/demo-safe responses and clearly avoid unsupported claims.
 
-### Option A: Local Demo Only
+## 6. Data Handling Policy
 
-Use when the course presentation can run from the presenter's machine.
+Allowed for public demo:
 
-Advantages:
+- Approved document metadata.
+- The full approved processed text chunk set needed for the local-equivalent public demo.
+- Embeddings generated from approved processed chunks.
+- Demo-safe uploaded client briefs used during the class session.
+- Generated proposal drafts in browser state or server responses.
 
-- Lowest cost.
-- Internal files remain local.
-- Simple to control.
+Not allowed unless explicitly approved:
 
-Limitations:
+- Raw files from `data/source-pdfs/`.
+- Full `data/extracted/` dumps.
+- Full `data/chunks/` JSON files copied into public assets.
+- Real API keys in Git, screenshots, docs, browser code, or chat messages.
+- Confidential client details, unapproved pricing, private implementation metrics, or unsupported case-study claims.
 
-- Not accessible to external evaluators after the presentation.
+Approved chunk scope:
 
-### Option B: Vercel App with Local Demo Data
+The user has approved uploading all processed chunks required for the public classroom demo so the deployed AI Chat can behave as closely as possible to the local demo. The upload target is the final generated local retrieval index, currently represented by `data/chunks/retrieval-index.json` after `npm run ingest`.
 
-Use when the public demo only needs UI and controlled sample data.
+Current known local ingestion baseline:
 
-Advantages:
+- 12 source documents
+- 205 chunks
+- 0 extraction failures
 
-- Simple deployment path for Next.js.
-- Good for showing the interface.
+This approval does not include raw PDFs/XLSX, `.env.local`, API keys, or unprocessed extracted dumps.
 
-Limitations:
+Sanitization rule:
 
-- Raw internal PDFs should not be deployed.
-- Live RAG over internal documents may not persist unless processed data is safely included or a database is configured.
-- Extracted/chunk JSON can contain internal text and must not be included in public assets without approval.
+Before uploading chunks to Supabase, perform a quick final review for clearly sensitive content. If a source contains sensitive material but is still useful for the demo, exclude only the problematic chunks through an explicit denylist and document that exclusion. Otherwise, upload the full approved local demo chunk set so public retrieval has source coverage close to local retrieval.
 
-### Option C: Vercel App with Supabase pgvector
+## 7. Implementation Work Packages
 
-Use when the public demo needs persistent retrieval.
+### Work Package A: Preflight and Free-Tier Gates
 
-Advantages:
+1. Confirm the demo is non-commercial and short-lived.
+2. Confirm the Supabase project is on Free Plan.
+3. Confirm Vercel is using Hobby, not Pro.
+4. Confirm Gemini key is Free Tier or explicitly approved.
+5. Confirm no custom domain or paid add-on is enabled.
+6. Confirm raw source files remain ignored by Git.
+7. Confirm the full local demo processed chunk set is approved for Supabase upload, except any explicitly denied chunks.
 
-- Supports deployed retrieval and document metadata.
-- Good fit for low-cost vector search.
+Exit criteria:
 
-Limitations:
+- Written approval exists in project notes or `docs/decisions.md`.
+- The deployer can explain the free-tier constraints before deployment.
 
-- Requires Supabase setup and careful access control.
-- Internal text may be stored in a managed service and must be approved.
+### Work Package B: Supabase Project and Schema
 
-Recommended path:
+1. Create the Supabase Free project.
+2. Prefer a nearby region such as Singapore for Vietnam/Thailand classroom use if available.
+3. Enable `vector` extension through SQL migration or dashboard.
+4. Create a migration from `docs/technical/supabase-pgvector-schema.sql`.
+5. Apply the migration.
+6. Confirm `rag_documents`, `rag_chunks`, and `match_rag_chunks(...)` exist.
+7. Confirm RLS is enabled.
+8. Confirm no anon/authenticated public read policies exist.
+9. Confirm only `service_role` can execute the private match RPC.
 
-Start with Option A. Move to Option C only if public deployed RAG is required and internal data handling is approved.
+Use `docs/technical/08-supabase-deployment-setup-guide.md` for detailed Supabase steps.
 
-## 5. Deployment Architecture
+### Work Package C: Application Integration
 
-```text
-Browser
-  -> Vercel-hosted Next.js app
-  -> Server API routes
-  -> Gemini API for generation and embeddings
-  -> Supabase Postgres/pgvector if enabled
+1. Add `@supabase/supabase-js`.
+2. Add `lib/supabase/server.ts` or equivalent server-only client.
+3. Add an embedding service that uses the selected Gemini embedding model.
+4. Add an ingestion script or admin API that:
+   - reads the full approved local demo chunk set,
+   - generates embeddings,
+   - upserts `rag_documents`,
+   - upserts `rag_chunks`,
+   - skips unchanged chunks where possible.
+5. Add a retrieval service that:
+   - generates a query embedding,
+   - calls `match_rag_chunks(...)`,
+   - maps rows into the existing citation DTO shape,
+   - falls back to local lexical retrieval if Supabase is unavailable.
+6. Wire chat and proposal services to use the Supabase retrieval path when `RAG_BACKEND=supabase`.
+
+Exit criteria:
+
+- Local API routes can retrieve from Supabase with a server-side key.
+- Browser bundles do not contain `SUPABASE_SERVICE_ROLE_KEY` or Gemini keys.
+
+### Work Package D: Vercel Project Setup
+
+Recommended path: Git integration for simplicity.
+
+1. Import the GitHub repository into Vercel.
+2. Confirm framework detection is `Next.js`.
+3. Confirm build command is `npm run build`.
+4. Confirm install command is Vercel default for npm.
+5. Confirm output directory remains Next.js default.
+6. Add the environment variables from Section 5.
+7. Deploy a Preview deployment first.
+8. Run smoke tests against the Preview URL.
+9. Promote or deploy to Production only after smoke tests pass.
+
+CLI alternative:
+
+```powershell
+vercel
+vercel --prod
+vercel inspect <deployment-url>
+vercel logs <deployment-url>
 ```
 
-Raw files should remain outside public static hosting. If a deployed demo needs document data, store processed chunks in Supabase only after approval. For local-only demo, server-side retrieval reads `data/chunks/retrieval-index.json`.
+### Work Package E: Verification
 
-## 6. Build and Release Steps
+Run local checks before public deployment:
 
-1. Complete local MVP.
-2. Confirm `.gitignore` excludes local secrets and internal raw data.
-3. Run local ingestion.
-4. Run local test suite.
-5. Run `npm run smoke` for the main local flows.
-6. Confirm no secrets are in client-side code.
-7. Confirm no raw internal PDFs are under `public/`.
-8. Configure Vercel environment variables.
-9. Configure Supabase only if approved.
-10. Deploy to Vercel.
-11. Run post-deployment smoke test.
-12. Update demo script with the final URL if public deployment is used.
+```powershell
+npm run typecheck
+npm run lint
+npm run build
+npm run smoke
+```
 
-## 7. Data Handling for Deployment
+Run deployed smoke tests:
 
-Rules:
+1. Open the Vercel URL.
+2. Confirm `/`, `/chat`, `/prompts`, `/proposal`, `/admin/data-sources`, and print/export routes load.
+3. Ask a source-grounded manufacturing question in `/chat`.
+4. Confirm the answer cites Supabase-backed source chunks.
+5. Generate a proposal using the demo manufacturing prompt.
+6. Confirm DOCX export works.
+7. Confirm print-friendly preview works.
+8. Confirm no source PDF URL is publicly accessible.
+9. Confirm Vercel logs show no repeated 500 errors.
+10. Confirm Supabase logs show expected low query volume only.
 
-- Do not deploy `data/source-pdfs/` as public assets.
-- Do not commit source PDFs to a public repository unless approved.
-- Do not deploy extracted/chunk JSON publicly unless internal data handling is approved.
-- Do not commit `.env.local`.
-- Do not expose service-role database keys in browser code.
-- If processed chunks contain internal text, treat them as internal materials.
+### Work Package F: Post-Demo Shutdown
 
-## 8. Cost Controls
+After the class demo:
 
-- Use free or low-cost tiers where possible.
-- Avoid fine-tuning.
-- Cache ingestion outputs.
-- Avoid re-embedding unchanged files.
-- Limit demo document ingestion to required sources if API quota is constrained.
+1. Rotate the Gemini key if it was displayed, shared, or used from an untrusted machine.
+2. Disable or remove the Vercel production deployment if public access is no longer needed.
+3. Delete Supabase demo chunks if they contain internal text and no longer need to remain online.
+4. Keep the schema/migration files in Git, but do not commit secrets or raw source materials.
+5. Record final demo URL, status, and any failures in `docs/progress.md`.
+
+## 8. Free-Tier Risk Register
+
+| Risk | Impact | Mitigation |
+|---|---|---|
+| Vercel Hobby quota exceeded | Public demo may throttle or pause specific features until reset. | Keep usage to class demo only; do not share widely. |
+| Supabase Free quota exceeded | Supabase may restrict usage. | Upload only processed text chunks needed for local-equivalent demo coverage; avoid storage buckets, raw files, and load tests. |
+| Supabase Free project pauses after inactivity | Demo may need manual restore later. | Open the dashboard and test the project before demo day. |
+| Gemini Free Tier rate limit hit | AI responses may fail or fall back. | Keep prompts short, test shortly before class, preserve local fallback behavior. |
+| Sensitive text uploaded to Supabase | Internal information could be exposed through server responses. | Review and sanitize chunk set before upload; keep RLS closed to anon/authenticated roles. |
+| Service role key leaks | Full database access risk. | Store only in Vercel server env vars; rotate immediately if exposed. |
+| Raw files committed or deployed | Confidentiality risk. | Keep `.gitignore`; never place source PDFs/XLSX under `public/`. |
 
 ## 9. Rollback Plan
 
-If public deployment fails:
+If Vercel deployment fails:
 
-- Use local demo mode.
-- Use pre-generated sample outputs clearly labeled as demo samples.
-- Present architecture and local app walkthrough.
-- Defer Supabase deployment until credentials and data approval are ready.
+- Use the local demo.
+- Share screenshots or a recorded walkthrough.
+- Keep Supabase project untouched until the app build is stable.
 
-## 10. Deployment Acceptance Criteria
+If Supabase retrieval fails:
 
-For local demo:
+- Set `RAG_BACKEND=local` or use the existing fallback mode.
+- Continue the classroom demo with local/demo-safe responses.
+- Explain that Supabase pgvector is the intended persistent RAG backend and show the schema/architecture.
 
-- App runs locally.
-- Ingestion completes or shows clear warnings.
-- Chat and proposal generation work.
-- Export works.
-- Demo script can be completed.
+If Gemini quota or API access fails:
 
-For public demo:
+- Use local fallback responses.
+- Use pre-generated demo outputs clearly labeled as samples.
+- Do not improvise unsupported company claims.
 
-- App loads from Vercel URL.
-- API routes work with configured server-side secrets.
-- No raw internal files are publicly accessible.
-- RAG data access is approved and controlled.
-- Main demo scenarios pass smoke testing.
+If sensitive data is accidentally deployed:
 
-## 11. Open Questions
+- Remove the Vercel deployment or environment variables immediately.
+- Delete affected Supabase rows.
+- Rotate `SUPABASE_SERVICE_ROLE_KEY` and Gemini keys.
+- Record the incident in `docs/progress.md`.
 
-- Is public deployment required for course grading or is local demo enough?
-- Can internal source documents or extracted text be stored in Supabase?
-- Which model provider and budget limits are approved?
-- Should the public demo include an admin password?
+## 10. Acceptance Criteria
+
+The deployment is accepted only when:
+
+- The app is publicly reachable from a Vercel URL.
+- The project remains on Vercel Hobby.
+- Supabase remains on Free Plan with no paid add-ons.
+- Gemini usage remains Free Tier or explicitly approved.
+- API routes work with server-side secrets.
+- Supabase-backed retrieval works for the main classroom demo scenarios with coverage close to local retrieval.
+- Source citations appear in chat/proposal outputs.
+- No raw source files are publicly accessible.
+- No service-role key or Gemini key appears in browser code, logs, Git, screenshots, or docs.
+- Main demo cases in `docs/demo/08-demo-cases-runbook.md` pass.
+- A rollback path is ready before the class demo starts.
+
+## 11. Codex Deployment Instructions
+
+When a future Codex session performs the deployment:
+
+1. Read this file first.
+2. Read `docs/technical/08-supabase-deployment-setup-guide.md`.
+3. Read `docs/technical/supabase-pgvector-schema.sql`.
+4. Read `.env.example` and `.gitignore`.
+5. Use the Vercel plugin/tooling for Vercel project setup, environment variables, deployment inspection, logs, and promotion.
+6. Use the Supabase plugin/tooling for Supabase project inspection, SQL/migration execution, advisors, and log checks.
+7. Do not enable paid plans, paid add-ons, custom domains, or paid Gemini billing without explicit user approval.
+8. Do not upload raw internal files.
+9. Update `docs/tasks.md`, `docs/progress.md`, and `docs/decisions.md` after the deployment work package.

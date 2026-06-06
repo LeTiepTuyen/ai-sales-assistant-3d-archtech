@@ -1,6 +1,9 @@
 type GeminiGenerateOptions = {
   systemInstruction: string;
   userPrompt: string;
+  maxOutputTokens?: number;
+  temperature?: number;
+  topP?: number;
 };
 
 type GeminiPart = {
@@ -19,6 +22,7 @@ type GeminiResponse = {
 };
 
 const DEFAULT_GEMINI_MODEL = "gemini-3.5-flash";
+const DEFAULT_MAX_OUTPUT_TOKENS = 8192;
 const PLACEHOLDER_API_KEYS = new Set(["", "NEEDS_INPUT", "YOUR_API_KEY", "YOUR_API_KEY_HERE"]);
 
 function getGeminiApiKey() {
@@ -40,9 +44,23 @@ export function getGeminiModel() {
   return model || DEFAULT_GEMINI_MODEL;
 }
 
+function getMaxOutputTokens(override?: number) {
+  const configured = Number(process.env.GEMINI_MAX_OUTPUT_TOKENS);
+  const requested = override ?? (Number.isFinite(configured) ? configured : DEFAULT_MAX_OUTPUT_TOKENS);
+
+  if (!Number.isFinite(requested)) {
+    return DEFAULT_MAX_OUTPUT_TOKENS;
+  }
+
+  return Math.min(Math.max(Math.floor(requested), 1024), 32768);
+}
+
 export async function generateWithGemini({
   systemInstruction,
-  userPrompt
+  userPrompt,
+  maxOutputTokens,
+  temperature = 0.35,
+  topP = 0.9
 }: GeminiGenerateOptions) {
   const apiKey = getGeminiApiKey();
 
@@ -70,7 +88,9 @@ export async function generateWithGemini({
           }
         ],
         generationConfig: {
-          maxOutputTokens: 1400
+          maxOutputTokens: getMaxOutputTokens(maxOutputTokens),
+          temperature,
+          topP
         }
       })
     }

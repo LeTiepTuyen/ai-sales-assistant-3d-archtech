@@ -1,14 +1,17 @@
 "use client";
 
-import { FormEvent, KeyboardEvent, useRef, useState } from "react";
+import { FormEvent, KeyboardEvent, useEffect, useRef, useState } from "react";
 import {
   Bot,
   ChevronDown,
+  Download,
   FileImage,
   FileText,
   Loader2,
   Paperclip,
+  Printer,
   SendHorizontal,
+  Square,
   UserRound,
   X
 } from "lucide-react";
@@ -40,6 +43,8 @@ type Message = {
   sources?: SourceCitation[];
   needsInput?: string[];
   attachments?: AttachmentMeta[];
+  canExport?: boolean;
+  exportTitle?: string;
 };
 
 type SourceCitation = {
@@ -59,6 +64,8 @@ type ChatResponse = {
   answer: string;
   sources: SourceCitation[];
   needsInput: string[];
+  canExport?: boolean;
+  exportTitle?: string;
   error?: string;
 };
 
@@ -123,14 +130,49 @@ const initialMessages: Message[] = [
   }
 ];
 
+const promptHubDraftStorageKey = "promptHubDraftForChat";
+
 export function ChatDemo() {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [attachments, setAttachments] = useState<AttachmentMeta[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [statusMessage, setStatusMessage] = useState("");
   const fileInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
+  const promptInputRef = useRef<HTMLTextAreaElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  function resizePromptInput() {
+    const element = promptInputRef.current;
+
+    if (!element) {
+      return;
+    }
+
+    const maxHeight = 220;
+    element.style.height = "auto";
+    const nextHeight = Math.min(element.scrollHeight, maxHeight);
+    element.style.height = `${nextHeight}px`;
+    element.style.overflowY = element.scrollHeight > maxHeight ? "auto" : "hidden";
+  }
+
+  useEffect(() => {
+    resizePromptInput();
+  }, [input]);
+
+  useEffect(() => {
+    const promptHubDraft = window.localStorage.getItem(promptHubDraftStorageKey);
+
+    if (promptHubDraft?.trim()) {
+      window.localStorage.removeItem(promptHubDraftStorageKey);
+      window.setTimeout(() => {
+        setInput(promptHubDraft);
+        setStatusMessage("Prompt Hub draft loaded. Review it, then send when ready.");
+      }, 0);
+    }
+  }, []);
 
   async function selectFiles(files: FileList | null) {
     if (!files?.length) {
@@ -160,6 +202,13 @@ export function ChatDemo() {
     }
   }
 
+  function stopAnswering() {
+    abortControllerRef.current?.abort();
+    abortControllerRef.current = null;
+    setLoading(false);
+    setStatusMessage("Response stopped.");
+  }
+
   async function submitMessage(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const trimmed = input.trim();
@@ -179,11 +228,16 @@ export function ChatDemo() {
     setInput("");
     setAttachments([]);
     setError("");
+    setStatusMessage("");
     setLoading(true);
+
+    const abortController = new AbortController();
+    abortControllerRef.current = abortController;
 
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
+        signal: abortController.signal,
         headers: {
           "Content-Type": "application/json"
         },
@@ -201,6 +255,11 @@ export function ChatDemo() {
           }))
         })
       });
+
+      if (abortController.signal.aborted) {
+        return;
+      }
+
       const data = (await response.json()) as ChatResponse;
 
       if (!response.ok) {
@@ -214,16 +273,75 @@ export function ChatDemo() {
         intentLabel: data.intentLabel,
         provider: data.provider,
         sources: data.sources,
-        needsInput: data.needsInput
+        needsInput: data.needsInput,
+        canExport: data.canExport,
+        exportTitle: data.exportTitle
       };
 
       setMessages((current) => [...current, assistantMessage]);
     } catch (caught) {
+      if (abortController.signal.aborted) {
+        setStatusMessage("Response stopped.");
+        return;
+      }
+
       const message = caught instanceof Error ? caught.message : "Chat request failed.";
       setError(message);
     } finally {
+      if (abortControllerRef.current === abortController) {
+        abortControllerRef.current = null;
+      }
       setLoading(false);
     }
+  }
+
+  async function exportChatDocx(message: Message) {
+    const response = await fetch("/api/chat/export/docx", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        title: message.exportTitle ?? "Chat Proposal Response",
+        content: message.content,
+        provider: message.provider,
+        intentLabel: message.intentLabel,
+        sources: message.sources,
+        confirmationItems: message.needsInput
+      })
+    });
+
+    if (!response.ok) {
+      const data = (await response.json()) as { error?: string };
+      setError(data.error ?? "DOCX export failed.");
+      return;
+    }
+
+    const blob = await response.blob();
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${message.id}.docx`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+  }
+
+  function openChatPrint(message: Message) {
+    window.localStorage.setItem(
+      "latestChatProposalResponse",
+      JSON.stringify({
+        title: message.exportTitle ?? "Chat Proposal Response",
+        content: message.content,
+        provider: message.provider,
+        intentLabel: message.intentLabel,
+        sources: message.sources ?? [],
+        confirmationItems: message.needsInput ?? [],
+        createdAt: new Date().toISOString()
+      })
+    );
+    window.open("/chat/print?print=1", "_blank", "noopener,noreferrer");
   }
 
   return (
@@ -262,17 +380,40 @@ export function ChatDemo() {
                       : "border-primary bg-primary text-primary-foreground"
                   )}
                 >
-                  {isAssistant && (message.intentLabel || message.provider) ? (
-                    <div className="mb-2 flex flex-wrap gap-2">
-                      {message.intentLabel ? (
-                        <Badge variant="outline" className="bg-card/90">
-                          {message.intentLabel}
-                        </Badge>
-                      ) : null}
-                      {message.provider ? (
-                        <Badge variant={message.provider === "gemini" ? "success" : "warning"}>
-                          {message.provider === "gemini" ? "Gemini" : "Local fallback"}
-                        </Badge>
+                  {isAssistant && (message.intentLabel || message.canExport) ? (
+                    <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                      <div className="flex flex-wrap gap-2">
+                        {message.intentLabel ? (
+                          <Badge variant="outline" className="bg-card/90">
+                            {message.intentLabel}
+                          </Badge>
+                        ) : null}
+                      </div>
+                      {message.canExport ? (
+                        <div className="flex gap-2">
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-8 px-2 text-xs"
+                            onClick={() => {
+                              void exportChatDocx(message);
+                            }}
+                          >
+                            <Download className="h-3.5 w-3.5" />
+                            DOCX
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            className="h-8 px-2 text-xs"
+                            onClick={() => openChatPrint(message)}
+                          >
+                            <Printer className="h-3.5 w-3.5" />
+                            Print
+                          </Button>
+                        </div>
                       ) : null}
                     </div>
                   ) : null}
@@ -303,7 +444,7 @@ export function ChatDemo() {
 
                   {message.needsInput?.length ? (
                     <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-amber-900">
-                      <p className="font-medium">NEEDS_INPUT</p>
+                      <p className="font-medium">Sales Review Notes</p>
                       <ul className="mt-1 list-inside list-disc">
                         {message.needsInput.map((item) => (
                           <li key={item}>{item}</li>
@@ -360,6 +501,11 @@ export function ChatDemo() {
             {error}
           </div>
         ) : null}
+        {statusMessage && !error ? (
+          <div className="mb-3 rounded-md border border-border bg-muted px-3 py-2 text-sm text-muted-foreground">
+            {statusMessage}
+          </div>
+        ) : null}
 
         {attachments.length ? (
           <div className="mb-3 flex flex-wrap gap-2">
@@ -387,7 +533,7 @@ export function ChatDemo() {
           </div>
         ) : null}
 
-        <div className="relative flex items-center gap-2 overflow-hidden rounded-lg border border-input bg-background p-2 shadow-inner focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/15">
+        <div className="relative flex items-end gap-2 overflow-hidden rounded-lg border border-input bg-background p-2 shadow-inner focus-within:border-primary/50 focus-within:ring-2 focus-within:ring-primary/15">
           <BorderBeam
             borderWidth={1}
             colorFrom="#f06423"
@@ -409,28 +555,45 @@ export function ChatDemo() {
             type="button"
             variant="ghost"
             size="icon"
-            className="h-10 w-10 shrink-0 self-center"
+            className="h-10 w-10 shrink-0 self-end"
             aria-label="Attach files"
             onClick={() => fileInputRef.current?.click()}
           >
             <Paperclip className="h-4 w-4" />
           </Button>
           <Textarea
+            ref={promptInputRef}
             value={input}
             onChange={(event) => setInput(event.target.value)}
             onKeyDown={submitOnEnter}
             placeholder="Ask about services, technical terms, sales messaging, or upload a client brief for a draft proposal."
-            className="max-h-40 min-h-10 flex-1 resize-none border-0 bg-transparent px-1 py-2 leading-6 shadow-none focus-visible:ring-0"
+            rows={1}
+            className="min-h-10 max-h-[220px] flex-1 resize-none overflow-y-hidden border-0 bg-transparent px-1 py-2 leading-6 shadow-none focus-visible:ring-0"
           />
-          <Button
-            type="submit"
-            size="icon"
-            className="h-10 w-10 shrink-0 self-center"
-            disabled={loading || !input.trim()}
-            aria-label="Send message"
-          >
-            <SendHorizontal className="h-4 w-4" />
-          </Button>
+          {loading ? (
+            <Button
+              type="button"
+              size="icon"
+              variant="destructive"
+              className="h-10 w-10 shrink-0 self-end"
+              aria-label="Stop Answering"
+              title="Stop Answering"
+              onClick={stopAnswering}
+            >
+              <Square className="h-3.5 w-3.5 fill-current" />
+            </Button>
+          ) : (
+            <Button
+              type="submit"
+              size="icon"
+              className="h-10 w-10 shrink-0 self-end"
+              disabled={!input.trim()}
+              aria-label="Send message"
+              title="Send message"
+            >
+              <SendHorizontal className="h-4 w-4" />
+            </Button>
+          )}
         </div>
       </form>
     </section>

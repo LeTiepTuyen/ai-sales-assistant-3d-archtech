@@ -4,7 +4,7 @@ Last updated: 2026-06-06
 
 ## Current Status
 
-GITHUB_REPOSITORY_BOOTSTRAP_AND_STANDARDS_DEFINED
+PUBLIC_DEPLOYMENT_PLAN_UPDATED_FOR_VERCEL_SUPABASE_PGVECTOR
 
 ## Completed
 
@@ -82,7 +82,7 @@ GITHUB_REPOSITORY_BOOTSTRAP_AND_STANDARDS_DEFINED
 - Smoke test harness updated to include `/prompts`.
 - Browser QA completed for `/chat` and `/prompts` on desktop and 390px mobile viewport.
 - TypeScript, lint, smoke test, and production build checks passed after the redesign.
-- Deployment work is paused; Supabase setup remains documented for future use but is not the current implementation focus.
+- Deployment planning has resumed; Vercel + Supabase pgvector is now the selected public classroom demo path, but runtime integration and deployment execution are still pending.
 - Chat generation now attempts Gemini whenever a valid server-side Gemini API key is configured, even when retrieval finds no source chunks. In no-source cases, the Gemini prompt requires `NEEDS_INPUT` instead of unsupported facts.
 - Chat and proposal generation now catch Gemini request failures and fall back locally instead of returning a 500 response to the UI.
 - Proposal generation now uses Gemini as the primary section-drafting path when the server-side key is configured; local proposal sections remain a safety fallback.
@@ -92,6 +92,30 @@ GITHUB_REPOSITORY_BOOTSTRAP_AND_STANDARDS_DEFINED
 - Conventional Commit guidance documented in `docs/github-commit-convention.md`.
 - `.gitignore` extended for public repository hygiene.
 - Minimal GitHub Actions CI workflow added at `.github/workflows/ci.yml`.
+- Chatbox proposal generation now uses a proposal-specific Gemini prompt contract with a higher output-token budget, uploaded brief citations, and a required client-ready manufacturing proposal structure.
+- Chatbox proposal fallback now produces a complete structured proposal instead of stopping at a short missing-input response when Gemini is unavailable or fails.
+- Uploaded DOCX briefs sent through Chatbox are now represented as source citations, so the uploaded file can appear as the primary source used for proposal drafting.
+- Visible app output labels were changed from `NEEDS_INPUT` to sales review / items-to-confirm wording while retaining guardrails against unsupported facts, timelines, budgets, metrics, and commitments.
+- Chatbox proposal responses now expose DOCX export and print-friendly preview actions.
+- API validation confirmed the Alpha Factory proposal test returns a long Gemini response with export enabled, cited source chunks, and no visible old missing-input label.
+- API validation confirmed the uploaded DOCX brief test uses `client-brief-demo.docx` as the first cited source and returns a long Gemini proposal response with export enabled.
+- Chatbox prompt input now auto-grows for longer prompts up to a capped height and then uses internal vertical scrolling.
+- Chatbox send control now switches to a stop control while a response is pending, aborts the active `/api/chat` request with `AbortController`, and avoids adding empty assistant messages after cancellation.
+- Chatbox Markdown rendering now supports standard Markdown tables as responsive HTML tables and keeps code-fenced text in horizontally scrollable blocks.
+- Gemini chat instructions now prefer standard Markdown tables over ASCII box tables when tabular comparison is useful.
+- Prompt Hub prompt library panel now has an independent vertical scrolling area for longer filtered prompt lists.
+- Prompt Hub Live Preview actions now make the intended workflow clearer with `Copy for Chat` and `Use in Chat`; the latter loads the compiled draft into `/chat` for review before sending.
+- A concise MVP demo cases runbook was added at `docs/demo/08-demo-cases-runbook.md`, covering `/chat`, `/prompts`, and `/proposal` with short copy-paste prompts and expected results.
+- Chatbox assistant responses no longer display the model/provider badge, keeping the response header focused on the user-facing intent label and export actions.
+- Prompt Hub prompt cards now scroll through the native `CommandList` overflow area, making the vertical scrollbar visible and usable when the filtered list contains more cards than the panel can show.
+- Root layout now uses `suppressHydrationWarning` on the `html` and `body` elements to prevent browser-injected attributes from causing a Next.js hydration overlay during local demo or future deployment checks.
+- Public deployment option has been selected as Vercel Hobby + Supabase Free Plan pgvector for a short classroom demo with a USD 0 target cost.
+- The user approved uploading all necessary processed chunks to Supabase so the public domain demo can behave like the local demo; this covers processed chunk text, metadata, and embeddings, not raw PDFs/XLSX or secrets.
+- Deployment plan updated to Version 2.0 with free-tier constraints, architecture, environment variables, work packages, risk register, rollback plan, acceptance criteria, and future Codex deployment instructions.
+- Supabase deployment setup guide updated for the approved pgvector path, including data-upload gates, schema verification SQL, Vercel env setup, runtime integration checklist, deployed smoke test, troubleshooting, and post-demo cleanup.
+- Official Vercel, Supabase, and Gemini pricing/billing documentation was checked on 2026-06-06 before updating the deployment guidance.
+- Pre-deployment repository hygiene review confirmed internal source folders, generated chunk outputs, `.env.local`, local reports, and Prompt Hub QA artifacts are excluded from commits; no folder restructuring is needed before the deployment work package.
+- TypeScript and ESLint passed before the pre-deployment commit. Production build passed when rerun with approved execution outside the Windows sandbox after a sandbox-only `spawn EPERM` failure.
 
 ## Important Notes
 
@@ -109,8 +133,12 @@ GITHUB_REPOSITORY_BOOTSTRAP_AND_STANDARDS_DEFINED
 - Gemini remains server-side only. Without a valid key or when a Gemini request fails, the app uses local fallback responses.
 - Generated chat/proposal outputs are draft content and still require sales review before external use.
 - DOCX export uses the `docx` package and server-side route handling.
+- Chatbox proposal response export also uses the server-side `docx` package; PDF export remains browser print-friendly HTML rather than a heavyweight PDF service.
 - Proposal preview data is stored in browser `localStorage` for local demo convenience, not as durable persistence.
-- Public deployment has not been performed and requires explicit approval.
+- Public deployment has been approved as the target path for classroom sharing, but the deployment itself has not been performed yet.
+- The chosen public deployment path is not configuration-only: the app still needs Supabase runtime integration, an embedding provider, approved chunk upload, and a Supabase-backed smoke test before deployment.
+- The public demo must remain on free tiers: Vercel Hobby, Supabase Free Plan, default Vercel domain, no Supabase paid add-ons, and Gemini Free Tier unless explicitly approved.
+- The public deployment should upload the full approved local demo processed chunk set to Supabase for local-equivalent RAG coverage. Raw source PDFs/XLSX, full unprocessed extracted dumps, and secrets remain private by default.
 - Google/Gemini API key is now configured for the intended Gemini-backed demo path, but local fallback mode remains available for resilience.
 - The previously shared Google AI Studio key should be treated as exposed and rotated before use.
 - Prompt Hub category labels are derived from source workbook use-case wording for UI filtering only; prompt content remains source-grounded from the XLSX workbook.
@@ -118,6 +146,6 @@ GITHUB_REPOSITORY_BOOTSTRAP_AND_STANDARDS_DEFINED
 
 ## Next Step
 
-1. Initialize local Git and connect it to the new GitHub repository.
-2. Continue development in small commits that follow the documented convention.
-3. Review `/chat` and `/proposal` locally with the configured Gemini key.
+1. Implement Supabase runtime retrieval and full approved local demo chunk upload.
+2. Add Gemini embedding generation behind a server-side key and verify the embedding dimension against the pgvector schema.
+3. Deploy to Vercel only after the Supabase-backed smoke test and data-handling gate pass.

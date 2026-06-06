@@ -57,7 +57,7 @@ export function ProposalPreviewPage() {
 
       {proposal.needsInput.length > 0 ? (
         <section className="mt-6 rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900 print:bg-white">
-          <h2 className="font-semibold">NEEDS_INPUT</h2>
+          <h2 className="font-semibold">Sales Review Notes</h2>
           <ul className="mt-2 list-inside list-disc leading-6">
             {proposal.needsInput.map((item) => (
               <li key={item}>{item}</li>

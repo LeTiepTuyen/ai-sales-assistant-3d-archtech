@@ -13,7 +13,7 @@ const sectionTitles = [
   "Implementation Process",
   "Scope of Application",
   "Expected Results",
-  "Risks, Assumptions, and NEEDS_INPUT"
+  "Risks, Assumptions, and Items to Confirm"
 ];
 
 function slugify(value: string) {
@@ -96,7 +96,7 @@ function localSectionContent(title: string, input: ProposalInput, chunks: LocalR
   const topEvidence = chunks[0];
   const sourceSentence = topEvidence
     ? `Relevant source context is available from ${topEvidence.documentName}${topEvidence.pageStart ? `, page ${topEvidence.pageStart}` : ""}.`
-    : "NEEDS_INPUT: No supporting source chunk was retrieved for this section.";
+    : "No supporting source chunk was retrieved for this section.";
 
   if (title === "Cover Page") {
     return [
@@ -121,7 +121,7 @@ function localSectionContent(title: string, input: ProposalInput, chunks: LocalR
       `Challenge: ${input.painPoints}`,
       `Proposed solution direction: ${input.services}`,
       `Expected business alignment: ${input.businessGoals}`,
-      "NEEDS_INPUT: Validate exact feature scope, delivery timeline, and measurable success criteria."
+      "Confirm exact feature scope, delivery timeline, and measurable success criteria."
     ].join("\n");
   }
 
@@ -129,7 +129,7 @@ function localSectionContent(title: string, input: ProposalInput, chunks: LocalR
     return [
       "Expected results must be expressed as draft business outcomes, not verified performance metrics.",
       `Business goal basis: ${input.businessGoals}`,
-      "NEEDS_INPUT: Quantified ROI, cost savings, timeline, and implementation results require verified source data or client confirmation."
+      "Quantified ROI, cost savings, timeline, and implementation results require verified source data or client confirmation."
     ].join("\n");
   }
 
@@ -137,7 +137,7 @@ function localSectionContent(title: string, input: ProposalInput, chunks: LocalR
     sourceSentence,
     `Client context: ${input.industry}; services requested: ${input.services}.`,
     "This section should be reviewed by Sales before external use.",
-    "NEEDS_INPUT: Add verified company details or client-specific commitments where required."
+    "Add verified company details or client-specific commitments where required."
   ].join("\n");
 }
 
@@ -227,7 +227,8 @@ export async function generateProposal(input: ProposalInput): Promise<ProposalDr
       "You are a source-grounded proposal assistant for 3D Archtech.",
       "Use only retrieved context and user-provided client input.",
       "Never invent company facts, client results, pricing, timeline, metrics, or implementation commitments.",
-      "Use NEEDS_INPUT for unsupported details or when retrieved context is empty.",
+      "For unsupported details or empty retrieved context, write plain-language items to confirm before external use.",
+      "Do not use all-caps missing-information labels anywhere.",
       "Write professional business English.",
       `Use exactly these section headings: ${sectionTitles.join("; ")}.`
     ].join("\n");

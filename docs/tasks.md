@@ -23,6 +23,7 @@ Last updated: 2026-06-06
 - [x] Configure Tailwind CSS.
 - [x] Add shadcn-style UI component setup.
 - [x] Build web app shell and navigation.
+- [x] Suppress root hydration warnings caused by browser-injected HTML/body attributes.
 - [x] Build Chatbox page shell with placeholder interaction.
 - [x] Build Proposal Generator page shell with placeholder preview.
 - [x] Build Admin Data Sources page shell with placeholder ingestion states.
@@ -63,13 +64,21 @@ Last updated: 2026-06-06
 - [x] Add Proposal Generate API route.
 - [x] Render chat assistant answers as structured Markdown with visual headings, bold text, and clean bullets.
 - [x] Support uploaded DOCX and text client briefs as proposal context in Chatbox responses.
+- [x] Improve Chatbox proposal responses with a dedicated Gemini prompt contract, higher token budget, uploaded-brief citations, and longer client-ready manufacturing proposal structure.
+- [x] Replace visible `NEEDS_INPUT` labels in app outputs with sales review notes while preserving source-grounded confirmation handling.
 
 ## Phase 5 - Export and Demo Polish
 
 - [x] Implement proposal preview page.
 - [x] Implement DOCX export.
 - [x] Implement print-friendly proposal view.
+- [x] Add Chatbox proposal response DOCX export and print-friendly preview actions.
+- [x] Add Chatbox prompt textarea auto-grow with internal scrolling for long prompts.
+- [x] Add Chatbox Stop Answering action with request abort handling.
+- [x] Render Chatbox Markdown tables responsively and keep code-fenced table text from breaking layout.
+- [x] Remove model/provider badge from Chatbox assistant responses for cleaner demo presentation.
 - [x] Add sample prompts and demo scenario controls.
+- [x] Add a ready-to-run demo cases runbook for the project demo day.
 - [x] Add loading, error, empty, and missing-source states.
 - [x] Run local demo and fix critical issues.
 - [x] Add local smoke test for main demo flows.
@@ -88,6 +97,8 @@ Last updated: 2026-06-06
 - [x] Add Prompt Hub realtime search and category filtering.
 - [x] Add Prompt Hub dynamic placeholder fields and live compiled preview.
 - [x] Add copy actions for base and compiled prompts.
+- [x] Add Prompt Hub prompt-list vertical scrolling and clearer copy/use-in-chat actions.
+- [x] Make the Prompt Hub card list use a clear native vertical scrollbar for long prompt lists.
 - [x] Update dashboard/data-source copy to reflect current local demo state.
 - [x] Add `/prompts` to the local smoke test harness.
 - [x] Browser-check desktop and mobile web UI for `/chat` and `/prompts`.
@@ -97,14 +108,20 @@ Last updated: 2026-06-06
 
 ## Phase 6 - Deployment
 
-- [ ] Confirm whether public deployment is required.
-- [ ] Confirm whether internal data can be stored outside local machine.
+- [x] Confirm whether public deployment is required.
+- [x] Confirm whether approved processed internal data can be stored in Supabase for the public classroom demo.
+- [x] Complete pre-deployment repository hygiene review before public deploy.
 - [x] Prepare Supabase schema if deployed RAG is approved.
 - [x] Add Supabase deployment setup guide for future pgvector deployment.
 - [x] Harden Supabase pgvector schema with RLS and server-side vector match RPC.
 - [x] Document Vercel deployment plan.
 - [x] List required environment variables.
 - [x] Verify planned safety rules for secrets and internal source files.
+- [x] Update deployment docs for the selected Vercel + Supabase pgvector free-tier public demo path.
+- [ ] Implement Supabase runtime integration for deployed RAG.
+- [ ] Add Gemini embedding provider behind a server-side API key.
+- [ ] Add full approved local demo chunk upload path for Supabase RAG tables.
+- [ ] Add Supabase-backed deployed smoke test.
 - [ ] Deploy public demo if approved.
 - [x] Update final demo checklist with local-only instructions.
 
@@ -115,9 +132,10 @@ Last updated: 2026-06-06
 - [x] Define a simple solo-maintainer GitHub workflow.
 - [x] Define Conventional Commit message guidance.
 - [x] Extend `.gitignore` for public repository safety.
+- [x] Ignore temporary Prompt Hub QA artifacts before the public deployment commit.
 - [x] Add GitHub Actions CI validation workflow.
 - [x] Document repository workflow and commit standards in English.
 
 ## Immediate Next Step
 
-Initialize local Git, connect the repository to GitHub, and then continue development in small validated commits.
+Implement the Supabase runtime retrieval and full approved local demo chunk upload work package, then deploy the public classroom demo to Vercel.

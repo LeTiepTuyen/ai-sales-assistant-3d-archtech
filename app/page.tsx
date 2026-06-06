@@ -94,7 +94,7 @@ export default function DashboardPage() {
               {
                 title: "Proposal generation",
                 description:
-                  "Capture client context and generate a structured proposal draft with source and NEEDS_INPUT handling.",
+                  "Capture client context and generate a structured proposal draft with source-aware sales review notes.",
                 href: "/proposal"
               },
               {

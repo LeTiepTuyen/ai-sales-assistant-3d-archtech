@@ -7,7 +7,9 @@ type ChatMarkdownProps = {
 type Block =
   | { type: "heading"; level: 1 | 2 | 3; text: string }
   | { type: "paragraph"; text: string }
-  | { type: "list"; items: string[] };
+  | { type: "list"; items: string[] }
+  | { type: "code"; language: string; text: string }
+  | { type: "table"; headers: string[]; rows: string[][] };
 
 function renderInlineMarkdown(text: string): ReactNode[] {
   const parts: ReactNode[] = [];
@@ -40,6 +42,9 @@ function parseBlocks(content: string): Block[] {
   const blocks: Block[] = [];
   let paragraphLines: string[] = [];
   let listItems: string[] = [];
+  let codeLines: string[] = [];
+  let codeLanguage = "";
+  let inCodeFence = false;
 
   function flushParagraph() {
     if (paragraphLines.length > 0) {
@@ -55,8 +60,54 @@ function parseBlocks(content: string): Block[] {
     }
   }
 
-  for (const rawLine of lines) {
+  function flushCode() {
+    if (codeLines.length > 0 || inCodeFence) {
+      blocks.push({ type: "code", language: codeLanguage, text: codeLines.join("\n") });
+      codeLines = [];
+      codeLanguage = "";
+    }
+  }
+
+  function isTableSeparator(value: string) {
+    return /^\s*\|?\s*:?-{3,}:?\s*(\|\s*:?-{3,}:?\s*)+\|?\s*$/.test(value);
+  }
+
+  function isTableRow(value: string) {
+    return value.includes("|") && value.replace(/\|/g, "").trim().length > 0;
+  }
+
+  function parseTableRow(value: string) {
+    return value
+      .trim()
+      .replace(/^\|/, "")
+      .replace(/\|$/, "")
+      .split("|")
+      .map((cell) => cell.trim());
+  }
+
+  for (let lineIndex = 0; lineIndex < lines.length; lineIndex += 1) {
+    const rawLine = lines[lineIndex];
     const line = rawLine.trim();
+
+    const fenceMatch = line.match(/^```([A-Za-z0-9_-]*)\s*$/);
+    if (fenceMatch) {
+      if (inCodeFence) {
+        inCodeFence = false;
+        flushCode();
+      } else {
+        flushParagraph();
+        flushList();
+        inCodeFence = true;
+        codeLanguage = fenceMatch[1] ?? "";
+        codeLines = [];
+      }
+      continue;
+    }
+
+    if (inCodeFence) {
+      codeLines.push(rawLine);
+      continue;
+    }
 
     if (!line) {
       flushParagraph();
@@ -76,6 +127,32 @@ function parseBlocks(content: string): Block[] {
       continue;
     }
 
+    const nextLine = lines[lineIndex + 1]?.trim() ?? "";
+    if (isTableRow(rawLine) && isTableSeparator(nextLine)) {
+      flushParagraph();
+      flushList();
+
+      const headers = parseTableRow(rawLine);
+      lineIndex += 2;
+      const rows: string[][] = [];
+
+      while (lineIndex < lines.length) {
+        const candidate = lines[lineIndex];
+        const candidateLine = candidate.trim();
+
+        if (!candidateLine || !isTableRow(candidate)) {
+          lineIndex -= 1;
+          break;
+        }
+
+        rows.push(parseTableRow(candidate));
+        lineIndex += 1;
+      }
+
+      blocks.push({ type: "table", headers, rows });
+      continue;
+    }
+
     const listMatch = line.match(/^(?:[-*]|\d+\.)\s+(.*)$/);
     if (listMatch) {
       flushParagraph();
@@ -89,6 +166,7 @@ function parseBlocks(content: string): Block[] {
 
   flushParagraph();
   flushList();
+  flushCode();
 
   return blocks;
 }
@@ -123,6 +201,57 @@ export function ChatMarkdown({ content }: ChatMarkdownProps) {
                 </li>
               ))}
             </ul>
+          );
+        }
+
+        if (block.type === "code") {
+          return (
+            <div
+              key={`${block.type}-${index}`}
+              className="max-w-full overflow-x-auto rounded-md border border-border bg-muted/60"
+            >
+              <pre className="min-w-max p-3 font-mono text-xs leading-6 text-foreground">
+                <code>{block.text}</code>
+              </pre>
+            </div>
+          );
+        }
+
+        if (block.type === "table") {
+          return (
+            <div
+              key={`${block.type}-${index}`}
+              className="max-w-full overflow-x-auto rounded-md border border-border"
+            >
+              <table className="w-full min-w-[640px] border-collapse bg-card text-left text-sm">
+                <thead className="bg-muted/80">
+                  <tr>
+                    {block.headers.map((header, headerIndex) => (
+                      <th
+                        key={`${index}-header-${headerIndex}`}
+                        className="border-b border-r border-border px-3 py-2 align-top font-semibold text-foreground last:border-r-0"
+                      >
+                        {renderInlineMarkdown(header)}
+                      </th>
+                    ))}
+                  </tr>
+                </thead>
+                <tbody>
+                  {block.rows.map((row, rowIndex) => (
+                    <tr key={`${index}-row-${rowIndex}`} className="odd:bg-white even:bg-muted/25">
+                      {block.headers.map((_, cellIndex) => (
+                        <td
+                          key={`${index}-row-${rowIndex}-${cellIndex}`}
+                          className="border-b border-r border-border px-3 py-2 align-top text-foreground last:border-r-0"
+                        >
+                          {renderInlineMarkdown(row[cellIndex] ?? "")}
+                        </td>
+                      ))}
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           );
         }
 

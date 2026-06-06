@@ -30,7 +30,7 @@ export async function POST(request: Request) {
       paragraph(`Created at: ${proposal.createdAt}`),
       paragraph(""),
       new Paragraph({
-        text: "NEEDS_INPUT",
+        text: "Sales Review Notes",
         heading: HeadingLevel.HEADING_1
       }),
       ...proposal.needsInput.map((item) => paragraph(`- ${item}`)),
