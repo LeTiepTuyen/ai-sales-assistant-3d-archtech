@@ -17,6 +17,7 @@ import { AnimatedGridPattern } from "@/components/ui/animated-grid-pattern";
 import { BlurFade } from "@/components/ui/blur-fade";
 import { BorderBeam } from "@/components/ui/border-beam";
 import { Button } from "@/components/ui/button";
+import { ChatMarkdown } from "@/components/chat-markdown";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 
@@ -26,6 +27,8 @@ type AttachmentMeta = {
   size: number;
   type: string;
   kind: "image" | "file";
+  text?: string;
+  contentBase64?: string;
 };
 
 type Message = {
@@ -59,15 +62,6 @@ type ChatResponse = {
   error?: string;
 };
 
-const initialMessages: Message[] = [
-  {
-    id: "assistant-intro",
-    role: "assistant",
-    content:
-      "Ready to help with source-aware sales questions, technical explanations, service recommendations, and client-ready response drafts."
-  }
-];
-
 function formatBytes(size: number) {
   if (size < 1024) {
     return `${size} B`;
@@ -80,6 +74,55 @@ function formatBytes(size: number) {
   return `${(size / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+function toBase64(buffer: ArrayBuffer) {
+  const bytes = new Uint8Array(buffer);
+  const chunkSize = 0x8000;
+  let binary = "";
+
+  for (let index = 0; index < bytes.length; index += chunkSize) {
+    binary += String.fromCharCode(...bytes.subarray(index, index + chunkSize));
+  }
+
+  return btoa(binary);
+}
+
+async function readAttachment(file: File): Promise<AttachmentMeta> {
+  const buffer = await file.arrayBuffer();
+  const fileName = file.name.toLowerCase();
+  const type = file.type || "application/octet-stream";
+  const isTextFile =
+    type.startsWith("text/") || fileName.endsWith(".txt") || fileName.endsWith(".csv");
+
+  if (isTextFile) {
+    return {
+      id: `${file.name}-${file.lastModified}-${file.size}`,
+      name: file.name,
+      size: file.size,
+      type,
+      kind: "file",
+      text: new TextDecoder().decode(buffer)
+    };
+  }
+
+  return {
+    id: `${file.name}-${file.lastModified}-${file.size}`,
+    name: file.name,
+    size: file.size,
+    type,
+    kind: file.type.startsWith("image/") ? "image" : "file",
+    contentBase64: toBase64(buffer)
+  };
+}
+
+const initialMessages: Message[] = [
+  {
+    id: "assistant-intro",
+    role: "assistant",
+    content:
+      "Ready to help with source-aware sales questions, technical explanations, service recommendations, and client-ready proposal drafts."
+  }
+];
+
 export function ChatDemo() {
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>(initialMessages);
@@ -89,18 +132,12 @@ export function ChatDemo() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
-  function selectFiles(files: FileList | null) {
+  async function selectFiles(files: FileList | null) {
     if (!files?.length) {
       return;
     }
 
-    const selected = Array.from(files).map((file) => ({
-      id: `${file.name}-${file.lastModified}-${file.size}`,
-      name: file.name,
-      size: file.size,
-      type: file.type || "application/octet-stream",
-      kind: file.type.startsWith("image/") ? ("image" as const) : ("file" as const)
-    }));
+    const selected = await Promise.all(Array.from(files).map((file) => readAttachment(file)));
 
     setAttachments((current) => {
       const known = new Set(current.map((item) => item.id));
@@ -152,13 +189,15 @@ export function ChatDemo() {
         },
         body: JSON.stringify({
           message: trimmed,
-          mode: "Ask Knowledge Base",
-          attachments: outgoingAttachments.map(({ id, name, size, type, kind }) => ({
+          mode: outgoingAttachments.length > 0 ? "Proposal Support" : "Ask Knowledge Base",
+          attachments: outgoingAttachments.map(({ id, name, size, type, kind, text, contentBase64 }) => ({
             id,
             name,
             size,
             type,
-            kind
+            kind,
+            text,
+            contentBase64
           }))
         })
       });
@@ -217,81 +256,85 @@ export function ChatDemo() {
                 ) : null}
                 <div
                   className={cn(
-                    "max-w-[820px] rounded-lg border px-4 py-3 text-sm leading-6 shadow-sm",
+                    "max-w-[860px] rounded-xl border px-4 py-4 text-sm leading-6 shadow-sm",
                     isAssistant
                       ? "border-border bg-card text-foreground"
                       : "border-primary bg-primary text-primary-foreground"
                   )}
                 >
-                {isAssistant && (message.intentLabel || message.provider) ? (
-                  <div className="mb-2 flex flex-wrap gap-2">
-                    {message.intentLabel ? (
-                      <Badge variant="outline" className="bg-card/90">
-                        {message.intentLabel}
-                      </Badge>
-                    ) : null}
-                    {message.provider ? (
-                      <Badge variant={message.provider === "gemini" ? "success" : "warning"}>
-                        {message.provider === "gemini" ? "Gemini" : "Local fallback"}
-                      </Badge>
-                    ) : null}
-                  </div>
-                ) : null}
-
-                <div className="whitespace-pre-wrap">{message.content}</div>
-
-                {message.attachments?.length ? (
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {message.attachments.map((attachment) => {
-                      const AttachmentIcon =
-                        attachment.kind === "image" ? FileImage : FileText;
-                      return (
-                        <span
-                          key={attachment.id}
-                          className="inline-flex items-center gap-2 rounded-md bg-white/15 px-2.5 py-1 text-xs"
-                        >
-                          <AttachmentIcon className="h-3.5 w-3.5" />
-                          {attachment.name}
-                        </span>
-                      );
-                    })}
-                  </div>
-                ) : null}
-
-                {message.needsInput?.length ? (
-                  <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-amber-900">
-                    <p className="font-medium">NEEDS_INPUT</p>
-                    <ul className="mt-1 list-inside list-disc">
-                      {message.needsInput.map((item) => (
-                        <li key={item}>{item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                ) : null}
-
-                {isAssistant && message.sources?.length ? (
-                  <details className="group mt-3 rounded-md border border-border bg-muted/45 px-3 py-2">
-                    <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-xs font-semibold text-muted-foreground">
-                      <span>{message.sources.length} cited source chunks</span>
-                      <ChevronDown className="h-3.5 w-3.5 transition-transform group-open:rotate-180" />
-                    </summary>
-                    <div className="mt-3 space-y-3">
-                      {message.sources.slice(0, 4).map((source) => (
-                        <div key={source.chunkId} className="rounded-md bg-card p-3 text-xs">
-                          <p className="font-semibold text-foreground">
-                            {source.documentName}
-                          </p>
-                          <p className="mt-1 text-muted-foreground">
-                            {source.pageStart ? `Page ${source.pageStart}` : source.sectionTitle ?? "Chunk"} / {source.serviceCategory}
-                          </p>
-                          <p className="mt-2 line-clamp-3 leading-5 text-muted-foreground">
-                            {source.preview}
-                          </p>
-                        </div>
-                      ))}
+                  {isAssistant && (message.intentLabel || message.provider) ? (
+                    <div className="mb-2 flex flex-wrap gap-2">
+                      {message.intentLabel ? (
+                        <Badge variant="outline" className="bg-card/90">
+                          {message.intentLabel}
+                        </Badge>
+                      ) : null}
+                      {message.provider ? (
+                        <Badge variant={message.provider === "gemini" ? "success" : "warning"}>
+                          {message.provider === "gemini" ? "Gemini" : "Local fallback"}
+                        </Badge>
+                      ) : null}
                     </div>
-                  </details>
-                ) : null}
+                  ) : null}
+
+                  {isAssistant ? (
+                    <ChatMarkdown content={message.content} />
+                  ) : (
+                    <div className="whitespace-pre-wrap">{message.content}</div>
+                  )}
+
+                  {message.attachments?.length ? (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {message.attachments.map((attachment) => {
+                        const AttachmentIcon =
+                          attachment.kind === "image" ? FileImage : FileText;
+                        return (
+                          <span
+                            key={attachment.id}
+                            className="inline-flex items-center gap-2 rounded-md bg-white/15 px-2.5 py-1 text-xs"
+                          >
+                            <AttachmentIcon className="h-3.5 w-3.5" />
+                            {attachment.name}
+                          </span>
+                        );
+                      })}
+                    </div>
+                  ) : null}
+
+                  {message.needsInput?.length ? (
+                    <div className="mt-3 rounded-md border border-amber-200 bg-amber-50 p-3 text-amber-900">
+                      <p className="font-medium">NEEDS_INPUT</p>
+                      <ul className="mt-1 list-inside list-disc">
+                        {message.needsInput.map((item) => (
+                          <li key={item}>{item}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  ) : null}
+
+                  {isAssistant && message.sources?.length ? (
+                    <details className="group mt-3 rounded-md border border-border bg-muted/45 px-3 py-2">
+                      <summary className="flex cursor-pointer list-none items-center justify-between gap-3 text-xs font-semibold text-muted-foreground">
+                        <span>{message.sources.length} cited source chunks</span>
+                        <ChevronDown className="h-3.5 w-3.5 transition-transform group-open:rotate-180" />
+                      </summary>
+                      <div className="mt-3 space-y-3">
+                        {message.sources.slice(0, 4).map((source) => (
+                          <div key={source.chunkId} className="rounded-md bg-card p-3 text-xs">
+                            <p className="font-semibold text-foreground">
+                              {source.documentName}
+                            </p>
+                            <p className="mt-1 text-muted-foreground">
+                              {source.pageStart ? `Page ${source.pageStart}` : source.sectionTitle ?? "Chunk"} / {source.serviceCategory}
+                            </p>
+                            <p className="mt-2 line-clamp-3 leading-5 text-muted-foreground">
+                              {source.preview}
+                            </p>
+                          </div>
+                        ))}
+                      </div>
+                    </details>
+                  ) : null}
                 </div>
               </BlurFade>
             );
@@ -302,9 +345,9 @@ export function ChatDemo() {
               <span className="mt-1 flex h-8 w-8 shrink-0 items-center justify-center rounded-md bg-[#17181d] text-primary">
                 <Bot className="h-4 w-4" />
               </span>
-              <div className="flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-3 text-sm text-muted-foreground shadow-sm">
+              <div className="flex items-center gap-3 rounded-lg border border-border bg-card px-4 py-3 text-sm text-muted-foreground shadow-sm">
                 <Loader2 className="h-4 w-4 animate-spin text-primary" />
-                Preparing source-aware response...
+                Reviewing the source material and shaping a client-ready answer...
               </div>
             </BlurFade>
           ) : null}
@@ -358,7 +401,9 @@ export function ChatDemo() {
             className="hidden"
             multiple
             accept="image/*,.pdf,.doc,.docx,.xls,.xlsx,.txt,.csv"
-            onChange={(event) => selectFiles(event.target.files)}
+            onChange={(event) => {
+              void selectFiles(event.target.files);
+            }}
           />
           <Button
             type="button"
@@ -374,7 +419,7 @@ export function ChatDemo() {
             value={input}
             onChange={(event) => setInput(event.target.value)}
             onKeyDown={submitOnEnter}
-            placeholder="Ask about services, technical terms, sales messaging, or client context."
+            placeholder="Ask about services, technical terms, sales messaging, or upload a client brief for a draft proposal."
             className="max-h-40 min-h-10 flex-1 resize-none border-0 bg-transparent px-1 py-2 leading-6 shadow-none focus-visible:ring-0"
           />
           <Button
