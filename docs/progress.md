@@ -48,6 +48,8 @@ GITHUB_REPOSITORY_BOOTSTRAP_AND_STANDARDS_DEFINED
 - Supabase CLI is not currently installed on this machine; future migration file creation should use `npx supabase migration new create_rag_pgvector_schema` after installing the CLI locally.
 - Local fallback response generation added when Gemini is not configured.
 - Chat UI now calls the API and displays intent, provider, source references, and `NEEDS_INPUT`.
+- Chat assistant responses now render structured Markdown with headings, bold emphasis, and clean bullet lists instead of raw `*` / `**` text.
+- Chat API now extracts uploaded DOCX and text brief content and passes it into proposal-oriented responses.
 - Proposal UI now calls the API and displays generated sections, source references, and `NEEDS_INPUT`.
 - Proposal preview page added at `/proposal/preview`.
 - Print-friendly proposal view added using browser print.

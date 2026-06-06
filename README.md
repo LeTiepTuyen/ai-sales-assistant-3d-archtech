@@ -8,8 +8,10 @@ Local-first web demo for a source-aware AI Sales Assistant. The app helps sales 
 - Local PDF/XLSX ingestion.
 - Local JSON chunk index and lexical retrieval for source context.
 - AI Chat Helper with source references, inline citations, attachment UI, and `NEEDS_INPUT` handling.
+- AI Chat Helper with source references, inline citations, formatted Markdown responses, attachment UI, and `NEEDS_INPUT` handling.
 - AI Sales Prompt Hub sourced from the internal prompt workbook.
 - Proposal generator with preview, print-friendly view, and DOCX export.
+- Chatbox can also read uploaded DOCX or text client briefs and use them as context for proposal-style responses.
 - Server-side Gemini generation when `GOOGLE_GENERATIVE_AI_API_KEY` is configured, with local fallback only as a safety net.
 
 This is a web application demo only. No native mobile app is included.
@@ -109,16 +111,17 @@ The smoke test verifies:
 Explain Digital Twin for a manufacturing client in business language.
 ```
 
-3. Confirm the response shows intent, provider, source references, and `NEEDS_INPUT`.
-4. Open Prompt Hub.
-5. Search for a prompt, fill detected placeholder fields, and copy the compiled prompt.
-6. Open Proposal Generator.
-7. Click `Load Demo Scenario`.
-8. Click `Generate Draft`.
-9. Review generated proposal sections and source references.
-10. Click `Preview` for the print-friendly page.
-11. Click `DOCX` to download a Word document.
-12. Open Admin Data Sources and explain ingestion status and `needs_review` warnings.
+3. Confirm the response shows intent, provider, formatted headings/bold/bullets, source references, and `NEEDS_INPUT`.
+4. Upload a DOCX client brief, ask for a proposal draft, and confirm the answer uses the uploaded brief context.
+5. Open Prompt Hub.
+6. Search for a prompt, fill detected placeholder fields, and copy the compiled prompt.
+7. Open Proposal Generator.
+8. Click `Load Demo Scenario`.
+9. Click `Generate Draft`.
+10. Review generated proposal sections and source references.
+11. Click `Preview` for the print-friendly page.
+12. Click `DOCX` to download a Word document.
+13. Open Admin Data Sources and explain ingestion status and `needs_review` warnings.
 
 ## Useful Commands
 

@@ -61,6 +61,8 @@ Last updated: 2026-06-06
 - [x] Keep local fallback only for missing Gemini configuration or API request failure.
 - [x] Add Chat API route.
 - [x] Add Proposal Generate API route.
+- [x] Render chat assistant answers as structured Markdown with visual headings, bold text, and clean bullets.
+- [x] Support uploaded DOCX and text client briefs as proposal context in Chatbox responses.
 
 ## Phase 5 - Export and Demo Polish
 
