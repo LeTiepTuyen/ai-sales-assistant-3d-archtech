@@ -1,0 +1,38 @@
+node_modules/
+.next/
+out/
+dist/
+.turbo/
+coverage/
+.nyc_output/
+.env
+.env.local
+.env.*.local
+.vercel/
+.DS_Store
+.idea/
+.vscode-test/
+.eslintcache
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.tgz
+prompt-hub-*.png
+
+# Internal company materials - do not commit to public repo by default
+/data/source-pdfs/*
+!/data/source-pdfs/.gitkeep
+
+# Generated intermediate data can be rebuilt
+/data/extracted/*
+!/data/extracted/.gitkeep
+/data/chunks/*
+!/data/chunks/.gitkeep
+
+# Local reports/logs
+*.log
+tsconfig.tsbuildinfo
+.playwright-mcp/
+playwright-report/
+test-results/
