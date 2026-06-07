@@ -19,7 +19,7 @@ Keep the demo short, source-aware, and sales-focused. The assistant output is a 
 4. Open these tabs:
    - `/prompts`
    - `/chat`
-   - `/proposal` only as a backup page
+   - `/proposal`
 
 ## MVP Case 1 - Prompt Hub to AI Chat
 
@@ -192,9 +192,63 @@ Expected outcome:
 - The response uses the attached client brief as primary client context.
 - The proposal stays realistic and flags timeline, budget, data availability, and measurable success criteria as items to confirm.
 
+## MVP Case 4 - Dedicated Proposal Draft Page
+
+Purpose: Show that Sales can use the dedicated proposal workflow to turn structured client context into a source-grounded proposal draft without writing a long free-form chat prompt.
+
+Route: `/proposal`
+
+Practical sales scenario:
+
+After a first discovery meeting, Sales has enough information to prepare an internal proposal draft for a manufacturing prospect. The client wants a focused pilot that helps production and management teams see factory-line status more clearly and discuss improvement options using 3D visualization and Digital Twin concepts.
+
+Fill the proposal form:
+
+```text
+Client name:
+Alpha Factory Vietnam
+
+Industry:
+Manufacturing - electronics assembly
+
+Pain points:
+The client has difficulty communicating production-line issues between operations, engineering, and management. Current reports are mostly static, so managers need a clearer visual way to understand line status, bottlenecks, and improvement scenarios before making decisions.
+
+Business goals:
+Create a practical sales proposal for a Digital Twin and 3D visualization pilot that improves production visibility, supports stakeholder alignment, and gives management a clearer way to review operational scenarios.
+
+Proposed services:
+Digital Twin pilot, interactive 3D visualization, production-line dashboard experience, and scenario presentation support.
+
+Timeline:
+To be confirmed after scope and data availability are reviewed.
+
+Budget:
+To be confirmed after pilot scope is validated.
+
+Old proposal style:
+Use best matching old proposal
+```
+
+Demo steps:
+
+1. Open `/proposal`.
+2. Fill the form using the values above.
+3. Click `Generate Proposal`.
+4. Review the generated proposal sections.
+5. Point out the source-aware sections and the items that require client confirmation.
+6. Use `DOCX`, `Preview`, or `Print` if time allows.
+
+Expected outcome:
+
+- The page generates a structured proposal draft from a clear sales form.
+- The draft focuses on Digital Twin and 3D visualization as a realistic pilot.
+- Timeline, budget, ROI, and measurable results remain under confirmation instead of being invented.
+- This case is faster than the Chat upload case and works well as a backup if the live presentation needs a shorter proposal demo.
+
 ## Presenter Closing Line
 
-This MVP shows how a sales representative can reuse internal 3D Archtech knowledge in three practical ways: explain technical services, answer sales questions with source context, and draft a proposal from a client brief. The system does not train a custom model; it uses RAG and server-side Gemini calls so the demo remains practical, maintainable, and low-cost for a classroom presentation.
+This MVP shows how a sales representative can reuse internal 3D Archtech knowledge in four practical ways: explain technical services, answer sales questions with source context, draft a proposal from a client brief, and generate a structured proposal draft from a dedicated sales form. The system does not train a custom model; it uses RAG and server-side Gemini calls so the demo remains practical, maintainable, and low-cost for a classroom presentation.
 
 ## Backup Plan
 

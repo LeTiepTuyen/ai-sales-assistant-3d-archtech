@@ -80,6 +80,7 @@ Last updated: 2026-06-07
 - [x] Add sample prompts and demo scenario controls.
 - [x] Add a ready-to-run demo cases runbook for the project demo day.
 - [x] Add final presentation demo cases and practical client brief files for the public MVP demo.
+- [x] Add dedicated `/proposal` draft page case to the final presentation demo script.
 - [x] Add loading, error, empty, and missing-source states.
 - [x] Run local demo and fix critical issues.
 - [x] Add local smoke test for main demo flows.

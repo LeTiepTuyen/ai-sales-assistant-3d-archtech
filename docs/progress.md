@@ -177,6 +177,7 @@ PUBLIC_VERCEL_SUPABASE_RAG_DEPLOYED_AND_SMOKE_TESTED
   - `mekong-logistics-client-brief.md`
   - `orion-property-client-brief.md`
 - Removed the Admin Data Sources entry from the left navigation/mobile navigation and removed the Data Source administration card from the Dashboard, while preserving the direct `/admin/data-sources` route for admin-only access by URL.
+- Added a fourth final presentation case for the dedicated `/proposal` page, including practical manufacturing client form inputs, demo steps, and expected proposal-draft outcomes.
 
 ## Important Notes
 
