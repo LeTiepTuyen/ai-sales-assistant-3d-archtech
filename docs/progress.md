@@ -171,6 +171,11 @@ PUBLIC_VERCEL_SUPABASE_RAG_DEPLOYED_AND_SMOKE_TESTED
 - Prompt Hub fix redeployed to Vercel production deployment `dpl_GP8qEcMMHEXicoMxX3mW6pvbf8Nu`.
 - Public `/prompts` smoke test now passes: HTTP 200, "Prompt library unavailable" absent, `AI Sales Prompt Hub` present, and the known proposal prompt present in the HTML.
 - Vercel error-log check after the Prompt Hub fix returned no error logs.
+- Added final presentation demo script at `docs/demo/09-final-presentation-demo-cases.md` with three practical sales-led MVP cases: Prompt Hub to Chat, AI Chatbot Q&A, and uploaded client brief to proposal draft.
+- Added three practical markdown client briefs under `docs/demo/client-briefs/` for demo upload/convert workflows:
+  - `alpha-factory-client-brief.md`
+  - `mekong-logistics-client-brief.md`
+  - `orion-property-client-brief.md`
 
 ## Important Notes
 
@@ -203,5 +208,6 @@ PUBLIC_VERCEL_SUPABASE_RAG_DEPLOYED_AND_SMOKE_TESTED
 ## Next Step
 
 1. Use `https://ai-sales-assistant-3d-archtech.vercel.app` for the classroom demo.
-2. Before demo day, run one quick `/prompts` check, one `/chat` prompt, and one `/proposal` generation to wake/verify Prompt Hub, Supabase, and Gemini.
-3. After the demo, rotate keys or delete Supabase rows if the public demo should no longer retain internal processed chunks.
+2. Use `docs/demo/09-final-presentation-demo-cases.md` as the short live demo script.
+3. Before demo day, run one quick `/prompts` check, one `/chat` prompt, and one uploaded-brief proposal generation to wake/verify Prompt Hub, Supabase, and Gemini.
+4. After the demo, rotate keys or delete Supabase rows if the public demo should no longer retain internal processed chunks.
