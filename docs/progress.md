@@ -1,10 +1,10 @@
 # Progress
 
-Last updated: 2026-06-06
+Last updated: 2026-06-07
 
 ## Current Status
 
-PUBLIC_DEPLOYMENT_PLAN_UPDATED_FOR_VERCEL_SUPABASE_PGVECTOR
+PUBLIC_VERCEL_SUPABASE_RAG_DEPLOYED_AND_SMOKE_TESTED
 
 ## Completed
 
@@ -45,7 +45,7 @@ PUBLIC_DEPLOYMENT_PLAN_UPDATED_FOR_VERCEL_SUPABASE_PGVECTOR
 - Supabase deployment setup guide added at `docs/technical/08-supabase-deployment-setup-guide.md`.
 - Supabase env comments clarified in `.env.example` and `.env.local`.
 - Supabase pgvector schema updated to enable RLS, use the `extensions.vector(768)` type, add an HNSW vector index, and expose a server-side `match_rag_chunks` RPC for future deployed retrieval.
-- Supabase CLI is not currently installed on this machine; future migration file creation should use `npx supabase migration new create_rag_pgvector_schema` after installing the CLI locally.
+- Supabase CLI is installed on this machine and was used to create/apply the live Supabase migrations.
 - Local fallback response generation added when Gemini is not configured.
 - Chat UI now calls the API and displays intent, provider, source references, and `NEEDS_INPUT`.
 - Chat assistant responses now render structured Markdown with headings, bold emphasis, and clean bullet lists instead of raw `*` / `**` text.
@@ -82,7 +82,7 @@ PUBLIC_DEPLOYMENT_PLAN_UPDATED_FOR_VERCEL_SUPABASE_PGVECTOR
 - Smoke test harness updated to include `/prompts`.
 - Browser QA completed for `/chat` and `/prompts` on desktop and 390px mobile viewport.
 - TypeScript, lint, smoke test, and production build checks passed after the redesign.
-- Deployment planning has resumed; Vercel + Supabase pgvector is now the selected public classroom demo path, but runtime integration and deployment execution are still pending.
+- Deployment planning has been executed; Vercel + Supabase pgvector is now the live public classroom demo path.
 - Chat generation now attempts Gemini whenever a valid server-side Gemini API key is configured, even when retrieval finds no source chunks. In no-source cases, the Gemini prompt requires `NEEDS_INPUT` instead of unsupported facts.
 - Chat and proposal generation now catch Gemini request failures and fall back locally instead of returning a 500 response to the UI.
 - Proposal generation now uses Gemini as the primary section-drafting path when the server-side key is configured; local proposal sections remain a safety fallback.
@@ -116,6 +116,55 @@ PUBLIC_DEPLOYMENT_PLAN_UPDATED_FOR_VERCEL_SUPABASE_PGVECTOR
 - Official Vercel, Supabase, and Gemini pricing/billing documentation was checked on 2026-06-06 before updating the deployment guidance.
 - Pre-deployment repository hygiene review confirmed internal source folders, generated chunk outputs, `.env.local`, local reports, and Prompt Hub QA artifacts are excluded from commits; no folder restructuring is needed before the deployment work package.
 - TypeScript and ESLint passed before the pre-deployment commit. Production build passed when rerun with approved execution outside the Windows sandbox after a sandbox-only `spawn EPERM` failure.
+- Vercel CLI was installed globally at version 54.9.1 and authenticated as `letieptuyen`.
+- Vercel project `tuyen-les-projects/ai-sales-assistant-3d-archtech` was linked and connected to the GitHub repository.
+- FE/UI production deployment is live at `https://ai-sales-assistant-3d-archtech.vercel.app`.
+- A dedicated `.vercelignore` was added so Vercel source bundles exclude `.env*`, raw/generated RAG data, local reports, screenshots, and internal source PDFs by default.
+- The first Vercel deployment before `.vercelignore` uploaded a large local source bundle and was removed from Vercel. The active production deployments use the `.vercelignore` allowlist.
+- The user explicitly approved making the Prompt Hub files public on the deployment domain. The prompt XLSX workbook and prompt PDF are now allowlisted for Vercel deployment so `/prompts` can render the full prompt hub publicly.
+- Deployed route checks passed for `/`, `/chat`, `/prompts`, `/proposal`, `/admin/data-sources`, and `/chat/print`.
+- Earlier FE-only deployed API smoke checks passed in local fallback mode before Supabase RAG was configured.
+- Supabase runtime integration was implemented for the deployed RAG path.
+- Added `@supabase/supabase-js` and a server-only Supabase client at `lib/supabase/server.ts`; the service-role key remains server-side only.
+- Added Gemini embedding generation at `lib/ai/embeddings.ts` using `gemini-embedding-001` with `GEMINI_EMBEDDING_DIMENSIONS=768` to match the prepared `extensions.vector(768)` schema.
+- Added `lib/rag/supabase-retrieval.ts` and `lib/rag/retrieval.ts`; chat and proposal services now use Supabase retrieval when `RAG_BACKEND=supabase` and fall back to local lexical retrieval if Supabase is missing or fails.
+- Added `scripts/upload-rag-to-supabase.mjs` to upload the approved processed local demo documents, chunks, and embeddings to Supabase idempotently.
+- Added `scripts/supabase-smoke-test.mjs` to verify Supabase row counts and the `match_rag_chunks` RPC with a Gemini query embedding.
+- Added package scripts `npm run supabase:upload-rag` and `npm run supabase:smoke`.
+- Updated `.env.example` with `RAG_BACKEND`, Gemini max-output, embedding model, and 768-dimensional embedding settings.
+- TypeScript and ESLint passed after the Supabase runtime integration. Production build passed when rerun with approved execution outside the Windows sandbox after the known sandbox-only `spawn EPERM` failure.
+- Supabase CLI was installed globally and verified at version 2.105.0.
+- Supabase CLI authentication was completed by the user.
+- Created live Supabase demo project `ai-sales-assistant-3darchtech-demo` in the user's personal organization, region `ap-southeast-1`, project ref `nttcsshnnayuxjskljhs`, status `ACTIVE_HEALTHY`.
+- Linked the local repository to Supabase project ref `nttcsshnnayuxjskljhs`.
+- Created and applied Supabase migrations `20260607142634_create_rag_pgvector_schema.sql` and `20260607143016_set_match_rag_chunks_search_path.sql`.
+- Updated the pgvector schema to schema-qualify `extensions.vector_cosine_ops` and `OPERATOR(extensions.<=>)` because the `vector` extension is installed under the `extensions` schema.
+- Fixed Supabase advisor warning by setting `search_path = public, extensions` on `match_rag_chunks`.
+- Verified live Supabase schema: `rag_documents` and `rag_chunks` exist, `vector` extension exists in `extensions`, `match_rag_chunks` exists, RLS is enabled on both RAG tables, and no public RAG policies exist.
+- Supabase database advisors now report `No issues found`.
+- `.env.local` now includes the Supabase URL, anon key, service-role key, `RAG_BACKEND=supabase`, `GEMINI_EMBEDDING_MODEL=gemini-embedding-001`, and `GEMINI_EMBEDDING_DIMENSIONS=768`; `.env.local` remains ignored and must not be committed.
+- The first Supabase upload run stopped at 190/205 chunks after a Gemini embedding Free Tier quota/rate-limit response.
+- `scripts/upload-rag-to-supabase.mjs` was updated to skip chunks that already have embeddings and retry retryable Gemini embedding failures.
+- Resume upload completed successfully: Supabase now has 12 documents, 205 chunks, and 205 chunks with embeddings.
+- `npm run supabase:smoke` passed, returning 5 vector matches with top source `Portfolio Digital Twin.pdf (portfolio-digital-twin-0001)`.
+- Vercel Production environment variables were configured for Supabase-backed RAG and Gemini generation/embedding:
+  - `RAG_BACKEND`
+  - `NEXT_PUBLIC_SUPABASE_URL`
+  - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+  - `SUPABASE_SERVICE_ROLE_KEY`
+  - `GOOGLE_GENERATIVE_AI_API_KEY`
+  - `GEMINI_MODEL`
+  - `GEMINI_EMBEDDING_MODEL`
+  - `GEMINI_EMBEDDING_DIMENSIONS`
+  - `GEMINI_MAX_OUTPUT_TOKENS`
+- `SUPABASE_SERVICE_ROLE_KEY` and `GOOGLE_GENERATIVE_AI_API_KEY` were added to Vercel Production only after explicit user approval to send those secrets from `.env.local` to Vercel.
+- Production redeploy completed successfully on Vercel deployment `dpl_H9WamSxF6pU6wzfQqQC3GFrxJGJc`.
+- Production alias `https://ai-sales-assistant-3d-archtech.vercel.app` now points to the Supabase-backed deployment.
+- Vercel inspect reports the production deployment status as `Ready`.
+- Deployed route smoke test passed for `/`, `/chat`, `/prompts`, and `/proposal` with HTTP 200 responses using Node fetch after clearing the local broken proxy environment.
+- Deployed `/api/chat` smoke test passed with provider `gemini`, 6 source citations, and first source `Portfolio Digital Twin.pdf`, confirming Supabase-backed RAG retrieval on the public domain.
+- Deployed `/api/proposals/generate` smoke test passed with provider `gemini`, 9 sections, 12 source citations, and first source from the Prompt Hub PDF.
+- Vercel error-log check after deployed smoke tests returned no error logs.
 
 ## Important Notes
 
@@ -129,23 +178,24 @@ PUBLIC_DEPLOYMENT_PLAN_UPDATED_FOR_VERCEL_SUPABASE_PGVECTOR
 - The current UI uses local retrieval for source context and Gemini for generation when `GOOGLE_GENERATIVE_AI_API_KEY` is configured.
 - Extracted text and chunk outputs may contain internal source material and are ignored by `.gitignore`.
 - Six large portfolio/showcase PDFs are marked `needs_review` because extracted text density is low relative to PDF size. They may be image-heavy and should be reviewed before citation use.
-- Embeddings remain pending. Current retrieval is local lexical JSON search.
+- Deployed-RAG embeddings have been generated and uploaded to Supabase for the approved local demo chunk set.
 - Gemini remains server-side only. Without a valid key or when a Gemini request fails, the app uses local fallback responses.
 - Generated chat/proposal outputs are draft content and still require sales review before external use.
 - DOCX export uses the `docx` package and server-side route handling.
 - Chatbox proposal response export also uses the server-side `docx` package; PDF export remains browser print-friendly HTML rather than a heavyweight PDF service.
 - Proposal preview data is stored in browser `localStorage` for local demo convenience, not as durable persistence.
-- Public deployment has been approved as the target path for classroom sharing, but the deployment itself has not been performed yet.
-- The chosen public deployment path is not configuration-only: the app still needs Supabase runtime integration, an embedding provider, approved chunk upload, and a Supabase-backed smoke test before deployment.
+- FE/UI public deployment has been performed on Vercel, and the full Supabase-backed RAG redeployment is now live.
+- The chosen public deployment path is complete for the classroom demo: the app has Supabase runtime integration, an embedding provider, a live Supabase schema, uploaded chunks/embeddings, Vercel Production env vars, production redeploy, and passing deployed smoke tests.
 - The public demo must remain on free tiers: Vercel Hobby, Supabase Free Plan, default Vercel domain, no Supabase paid add-ons, and Gemini Free Tier unless explicitly approved.
 - The public deployment should upload the full approved local demo processed chunk set to Supabase for local-equivalent RAG coverage. Raw source PDFs/XLSX, full unprocessed extracted dumps, and secrets remain private by default.
 - Google/Gemini API key is now configured for the intended Gemini-backed demo path, but local fallback mode remains available for resilience.
 - The previously shared Google AI Studio key should be treated as exposed and rotated before use.
 - Prompt Hub category labels are derived from source workbook use-case wording for UI filtering only; prompt content remains source-grounded from the XLSX workbook.
+- Prompt Hub source files are approved for public Vercel deployment and are now treated differently from the larger internal source PDFs. Other raw source PDFs/XLSX, extracted dumps, chunks, and secrets remain excluded from Vercel source bundles.
 - Browser plugin telemetry showed external Statsig/Cloudflare network warnings during QA; app console logs for localhost were clean.
 
 ## Next Step
 
-1. Implement Supabase runtime retrieval and full approved local demo chunk upload.
-2. Add Gemini embedding generation behind a server-side key and verify the embedding dimension against the pgvector schema.
-3. Deploy to Vercel only after the Supabase-backed smoke test and data-handling gate pass.
+1. Use `https://ai-sales-assistant-3d-archtech.vercel.app` for the classroom demo.
+2. Before demo day, run one quick `/chat` prompt and one `/proposal` generation to wake/verify Supabase and Gemini.
+3. After the demo, rotate keys or delete Supabase rows if the public demo should no longer retain internal processed chunks.

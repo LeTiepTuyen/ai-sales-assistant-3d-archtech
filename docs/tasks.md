@@ -1,6 +1,6 @@
 # Tasks
 
-Last updated: 2026-06-06
+Last updated: 2026-06-07
 
 ## Phase 1 - Documents and Planning
 
@@ -40,7 +40,7 @@ Last updated: 2026-06-06
 - [x] Add extraction quality status and manual-review warnings.
 - [x] Implement chunking with document metadata.
 - [x] Create local JSON fallback knowledge base.
-- [ ] Configure embedding provider behind server-side API key.
+- [x] Configure embedding provider behind server-side API key.
 - [x] Implement local lexical retrieval service.
 - [x] Prepare Supabase pgvector schema for later deployment.
 - [x] Add source citation builder for generated answers.
@@ -118,11 +118,22 @@ Last updated: 2026-06-06
 - [x] List required environment variables.
 - [x] Verify planned safety rules for secrets and internal source files.
 - [x] Update deployment docs for the selected Vercel + Supabase pgvector free-tier public demo path.
-- [ ] Implement Supabase runtime integration for deployed RAG.
-- [ ] Add Gemini embedding provider behind a server-side API key.
-- [ ] Add full approved local demo chunk upload path for Supabase RAG tables.
-- [ ] Add Supabase-backed deployed smoke test.
-- [ ] Deploy public demo if approved.
+- [x] Deploy the FE/UI shell to Vercel production first.
+- [x] Allowlist approved Prompt Hub source files for Vercel deployment so `/prompts` is populated publicly.
+- [x] Implement Supabase runtime integration for deployed RAG.
+- [x] Add Gemini embedding provider behind a server-side API key.
+- [x] Add full approved local demo chunk upload path for Supabase RAG tables.
+- [x] Add Supabase-backed local smoke test script.
+- [x] Install Supabase CLI locally on the deployment machine.
+- [x] Authenticate Supabase CLI or provide a live project ref through the Supabase plugin/dashboard.
+- [x] Create the live Supabase Free/nano demo project.
+- [x] Apply Supabase schema to the live Free Plan project.
+- [x] Configure local Supabase environment variables.
+- [x] Configure Vercel Supabase/Gemini environment variables.
+- [x] Upload approved processed demo chunks and embeddings to Supabase.
+- [x] Run Supabase-backed local smoke test.
+- [x] Run Supabase-backed deployed smoke test.
+- [x] Deploy full public demo with Supabase-backed RAG if approved.
 - [x] Update final demo checklist with local-only instructions.
 
 ## Phase 6.5 - GitHub Repository Standards
@@ -138,4 +149,4 @@ Last updated: 2026-06-06
 
 ## Immediate Next Step
 
-Implement the Supabase runtime retrieval and full approved local demo chunk upload work package, then deploy the public classroom demo to Vercel.
+Monitor the public classroom demo during use, keep the app on free tiers, and perform post-demo cleanup or key rotation if the public URL or secrets are no longer needed.

@@ -9,7 +9,6 @@ coverage/
 .env.local
 .env.*.local
 .vercel/
-supabase/.temp/
 .DS_Store
 .idea/
 .vscode-test/
@@ -22,11 +21,13 @@ pnpm-debug.log*
 prompt-hub-*.png
 prompt-hub-*.md
 
-# Internal company materials - do not commit to public repo by default
+# Internal company materials - do not upload with Vercel source bundles.
 /data/source-pdfs/*
 !/data/source-pdfs/.gitkeep
+!/data/source-pdfs/[[]3D Archtech] Prompts for AI sales assistant.xlsx
+!/data/source-pdfs/[[]3D Archtech] Prompts for AI sales assistant - Prompt cho sales (Eng).pdf
 
-# Generated intermediate data can be rebuilt
+# Generated intermediate data can be rebuilt or uploaded to Supabase later.
 /data/extracted/*
 !/data/extracted/.gitkeep
 /data/chunks/*

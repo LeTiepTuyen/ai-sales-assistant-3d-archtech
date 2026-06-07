@@ -64,8 +64,25 @@ function scoreChunk(queryTokens: string[], chunk: LocalChunk) {
 }
 
 export async function loadLocalRetrievalIndex(indexPath = defaultIndexPath) {
-  const raw = await fs.readFile(indexPath, "utf8");
-  return JSON.parse(raw) as RetrievalIndex;
+  try {
+    const raw = await fs.readFile(indexPath, "utf8");
+    return JSON.parse(raw) as RetrievalIndex;
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      "code" in error &&
+      (error as NodeJS.ErrnoException).code === "ENOENT"
+    ) {
+      return {
+        generatedAt: new Date(0).toISOString(),
+        retrievalMode: "missing_local_index",
+        chunkCount: 0,
+        chunks: []
+      };
+    }
+
+    throw error;
+  }
 }
 
 export async function retrieveLocalChunks(

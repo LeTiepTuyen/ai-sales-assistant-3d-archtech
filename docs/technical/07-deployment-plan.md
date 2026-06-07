@@ -1,9 +1,9 @@
 # Public Deployment Plan
 
 Project: AI Sales Assistant for 3D Archtech  
-Version: 2.0  
-Date: 2026-06-06  
-Status: Approved target path for a public classroom demo using Vercel + Supabase pgvector on free tiers
+Version: 2.2  
+Date: 2026-06-07  
+Status: Full public Vercel + Supabase pgvector classroom demo deployed and smoke tested
 
 ## 1. Deployment Decision
 
@@ -45,7 +45,7 @@ Free-tier references checked on 2026-06-06:
 
 ## 3. Current Fit Assessment
 
-The selected architecture is appropriate, but the current codebase is not yet fully deployed-RAG ready.
+The selected architecture is appropriate and has been deployed for the classroom demo.
 
 Already prepared:
 
@@ -56,19 +56,26 @@ Already prepared:
 - RLS is enabled in the prepared schema.
 - `match_rag_chunks(...)` RPC is prepared for server-side vector retrieval.
 - `.gitignore` excludes `.env.local`, raw source files, extracted text, and local chunks.
+- `@supabase/supabase-js` is installed.
+- `lib/supabase/server.ts` provides a server-only Supabase client.
+- `lib/ai/embeddings.ts` generates Gemini embeddings at 768 dimensions.
+- `lib/rag/supabase-retrieval.ts` calls the `match_rag_chunks(...)` RPC.
+- Chat and proposal services use Supabase retrieval when `RAG_BACKEND=supabase`.
+- `scripts/upload-rag-to-supabase.mjs` uploads approved processed chunks and embeddings.
+- `scripts/supabase-smoke-test.mjs` verifies row counts and vector matching.
+- Live Supabase project `ai-sales-assistant-3darchtech-demo` has been created in `ap-southeast-1` with ref `nttcsshnnayuxjskljhs`.
+- Supabase pgvector migrations have been applied and database advisors report no issues.
+- The approved processed dataset has been uploaded: 12 documents, 205 chunks, 205 embeddings.
+- Vercel Production env vars have been configured and the production deployment has been redeployed.
+- Public URL `https://ai-sales-assistant-3d-archtech.vercel.app` passes deployed chat/proposal smoke tests with Supabase-backed source citations.
 
-Still required before public Vercel + Supabase pgvector deployment:
+Still required for demo operation:
 
-- Add `@supabase/supabase-js` as an application dependency.
-- Add a server-only Supabase client utility.
-- Add an embedding provider behind a server-side API key.
-- Add a deployed ingestion path that writes the full approved local demo metadata, chunks, and embeddings to Supabase.
-- Add a retrieval mode that calls `match_rag_chunks(...)` from server-side API routes.
-- Keep local JSON retrieval as a fallback.
-- Add a smoke test that confirms deployed chat/proposal routes can retrieve Supabase-backed sources.
-- Re-run security checks to confirm no raw internal files or secrets are deployed.
+- Run a quick pre-class smoke test shortly before presenting.
+- Keep usage limited to the short classroom demo.
+- Rotate keys or clean Supabase rows after the demo if the public environment is no longer needed.
 
-Therefore, the plan is optimized for the target, but it is not "configuration only." It requires a small backend integration work package before deployment.
+Therefore, the plan has been executed for the approved classroom demo target.
 
 ## 4. Deployment Architecture
 
@@ -98,7 +105,8 @@ Configure these locally in `.env.local` and in Vercel Project Settings for `Prod
 ```env
 GOOGLE_GENERATIVE_AI_API_KEY=<server-side Gemini key>
 GEMINI_MODEL=gemini-3.5-flash
-GEMINI_EMBEDDING_MODEL=<approved embedding model>
+GEMINI_EMBEDDING_MODEL=gemini-embedding-001
+GEMINI_EMBEDDING_DIMENSIONS=768
 GEMINI_MAX_OUTPUT_TOKENS=8192
 
 NEXT_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
@@ -184,21 +192,21 @@ Use `docs/technical/08-supabase-deployment-setup-guide.md` for detailed Supabase
 
 ### Work Package C: Application Integration
 
-1. Add `@supabase/supabase-js`.
-2. Add `lib/supabase/server.ts` or equivalent server-only client.
-3. Add an embedding service that uses the selected Gemini embedding model.
-4. Add an ingestion script or admin API that:
+1. `@supabase/supabase-js` has been added.
+2. `lib/supabase/server.ts` has been added as the server-only client.
+3. `lib/ai/embeddings.ts` has been added and uses 768-dimensional Gemini embeddings.
+4. `scripts/upload-rag-to-supabase.mjs` has been added and:
    - reads the full approved local demo chunk set,
    - generates embeddings,
    - upserts `rag_documents`,
    - upserts `rag_chunks`,
    - skips unchanged chunks where possible.
-5. Add a retrieval service that:
+5. `lib/rag/supabase-retrieval.ts` has been added and:
    - generates a query embedding,
    - calls `match_rag_chunks(...)`,
    - maps rows into the existing citation DTO shape,
    - falls back to local lexical retrieval if Supabase is unavailable.
-6. Wire chat and proposal services to use the Supabase retrieval path when `RAG_BACKEND=supabase`.
+6. Chat and proposal services now use the Supabase retrieval path when `RAG_BACKEND=supabase`.
 
 Exit criteria:
 

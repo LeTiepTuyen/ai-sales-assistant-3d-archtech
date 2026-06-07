@@ -7,6 +7,8 @@
     "build": "next build",
     "ingest": "node scripts/ingest-documents.mjs",
     "retrieve": "node scripts/search-local-index.mjs",
+    "supabase:upload-rag": "node scripts/upload-rag-to-supabase.mjs",
+    "supabase:smoke": "node scripts/supabase-smoke-test.mjs",
     "smoke": "node scripts/local-smoke-test.mjs",
     "start": "next start",
     "lint": "eslint .",
@@ -14,6 +16,7 @@
   },
   "dependencies": {
     "@radix-ui/react-slot": "latest",
+    "@supabase/supabase-js": "^2.107.0",
     "class-variance-authority": "latest",
     "clsx": "latest",
     "cmdk": "^1.1.1",

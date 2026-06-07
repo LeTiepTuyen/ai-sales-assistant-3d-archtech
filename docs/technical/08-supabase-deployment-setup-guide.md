@@ -1,8 +1,8 @@
 # Supabase pgvector Deployment Setup Guide
 
 Project: AI Sales Assistant for 3D Archtech  
-Date: 2026-06-06  
-Status: Approved setup guide for Vercel + Supabase pgvector public classroom demo, free-tier target
+Date: 2026-06-07  
+Status: Runtime integration, live Supabase schema, chunk upload, and deployed Vercel smoke tests completed
 
 ## 1. Goal
 
@@ -33,14 +33,25 @@ Prepared:
 - Local fallback retrieval: `lib/rag/local-retrieval.ts`
 - Local chunk output: `data/chunks/retrieval-index.json`, ignored by Git
 
-Not yet implemented:
+Implemented in the repository:
 
 - Runtime `@supabase/supabase-js` dependency
-- Server-only Supabase client
-- Gemini embedding generation path
-- Ingestion script that uploads the full approved local demo chunk set and embeddings
-- Supabase retrieval service used by chat/proposal API routes
-- Supabase-backed deployed smoke test
+- Server-only Supabase client: `lib/supabase/server.ts`
+- Gemini embedding generation path: `lib/ai/embeddings.ts`
+- Supabase retrieval service: `lib/rag/supabase-retrieval.ts`
+- Retrieval selector/fallback: `lib/rag/retrieval.ts`
+- Chat/proposal service wiring through `RAG_BACKEND=supabase`
+- Upload script: `scripts/upload-rag-to-supabase.mjs`
+- Supabase smoke-test script: `scripts/supabase-smoke-test.mjs`
+
+Completed:
+
+- Live Supabase Free/nano project selection/creation
+- Applying `docs/technical/supabase-pgvector-schema.sql`
+- Adding Supabase URL and service-role/secret key to `.env.local`
+- Adding Supabase/Gemini environment variables in Vercel Production
+- Running the approved chunk upload
+- Running Supabase-backed deployed smoke tests after redeploy
 
 ## 3. Free-Tier Rules
 
@@ -239,7 +250,8 @@ Also add Gemini values:
 ```env
 GOOGLE_GENERATIVE_AI_API_KEY=<server-side Gemini key>
 GEMINI_MODEL=gemini-3.5-flash
-GEMINI_EMBEDDING_MODEL=<approved embedding model>
+GEMINI_EMBEDDING_MODEL=gemini-embedding-001
+GEMINI_EMBEDDING_DIMENSIONS=768
 GEMINI_MAX_OUTPUT_TOKENS=8192
 ```
 
@@ -247,15 +259,15 @@ Use Preview environment variables too if the first deployment will be tested as 
 
 ## 10. Application Integration Checklist
 
-Future Codex implementation should complete these steps before public deployment:
+Repository implementation status:
 
-1. Install Supabase client:
+1. Supabase client is installed:
 
 ```powershell
 npm install @supabase/supabase-js
 ```
 
-2. Add a server-only client utility, for example:
+2. Server-only client utility:
 
 ```text
 lib/supabase/server.ts
@@ -265,10 +277,10 @@ Requirements:
 
 - Read `NEXT_PUBLIC_SUPABASE_URL`.
 - Read `SUPABASE_SERVICE_ROLE_KEY`.
-- Throw a clear server-side configuration error if required values are missing.
+- Return `null` when required values are missing so the app can fall back safely.
 - Never export the service key to client components.
 
-3. Add an embedding service:
+3. Embedding service:
 
 ```text
 lib/ai/embeddings.ts
@@ -276,11 +288,11 @@ lib/ai/embeddings.ts
 
 Requirements:
 
-- Use the approved Gemini embedding model.
-- Confirm output dimension before inserting into `extensions.vector(768)`.
+- Use `gemini-embedding-001` by default.
+- Request `GEMINI_EMBEDDING_DIMENSIONS=768` before inserting into `extensions.vector(768)`.
 - If the chosen model does not return 768 dimensions, update the schema deliberately before uploading data.
 
-4. Add a Supabase ingestion script:
+4. Supabase ingestion script:
 
 ```text
 scripts/upload-rag-to-supabase.mjs
@@ -292,11 +304,11 @@ Requirements:
 - Upsert `rag_documents` by `document_id`.
 - Upsert `rag_chunks` by `chunk_id`.
 - Generate and store embeddings.
-- Skip unchanged chunks when possible.
-- Print a summary: documents upserted, chunks upserted, skipped chunks, failed chunks.
+- Upsert rows by stable `document_id` and `chunk_id` so reruns do not duplicate data.
+- Print incremental upload progress and a final summary.
 - Do not upload raw files.
 
-5. Add a Supabase retrieval service:
+5. Supabase retrieval service:
 
 ```text
 lib/rag/supabase-retrieval.ts
@@ -310,7 +322,7 @@ Requirements:
 - Support document type and service category filters if needed.
 - Fall back to local lexical retrieval if Supabase is not configured or fails.
 
-6. Wire chat/proposal services:
+6. Chat/proposal services are wired:
 
 - Use Supabase retrieval when `RAG_BACKEND=supabase`.
 - Use local retrieval when `RAG_BACKEND=local` or Supabase fails.
@@ -336,7 +348,7 @@ data/chunks/retrieval-index.json
 6. Upload approved chunks:
 
 ```powershell
-node scripts/upload-rag-to-supabase.mjs
+npm run supabase:upload-rag
 ```
 
 7. Verify row counts:
@@ -347,7 +359,11 @@ select count(*) as chunks from rag_chunks;
 select count(*) as chunks_with_embeddings from rag_chunks where embedding is not null;
 ```
 
-8. Test the RPC with one known query embedding after the application embedding service exists.
+8. Test row counts and the RPC:
+
+```powershell
+npm run supabase:smoke
+```
 
 Expected baseline after uploading the current local demo data:
 

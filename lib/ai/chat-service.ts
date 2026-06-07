@@ -1,7 +1,8 @@
 import { routeIntent } from "@/lib/ai/intent-router";
 import { buildCitations, formatCitation, type SourceCitation } from "@/lib/ai/source-citations";
 import { generateWithGemini, isGeminiConfigured } from "@/lib/ai/gemini";
-import { retrieveLocalChunks, type LocalRetrievalResult } from "@/lib/rag/local-retrieval";
+import type { LocalRetrievalResult } from "@/lib/rag/local-retrieval";
+import { retrieveChunks } from "@/lib/rag/retrieval";
 import { Buffer } from "node:buffer";
 import mammoth from "mammoth";
 
@@ -383,13 +384,13 @@ export async function answerChat(request: ChatRequest) {
   const retrievalQuery = `${request.message} ${route.preferredServiceCategory ?? ""}`;
   const attachmentContext = await buildAttachmentContext(request.attachments);
 
-  let chunks = await retrieveLocalChunks(retrievalQuery, {
+  let chunks = await retrieveChunks(retrievalQuery, {
     limit: 6,
     serviceCategory: route.preferredServiceCategory
   });
 
   if (chunks.length < 3) {
-    const fallbackChunks = await retrieveLocalChunks(retrievalQuery, {
+    const fallbackChunks = await retrieveChunks(retrievalQuery, {
       limit: 6
     });
     const seen = new Set(chunks.map((chunk) => chunk.chunkId));

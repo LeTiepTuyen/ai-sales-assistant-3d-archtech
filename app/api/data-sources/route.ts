@@ -14,11 +14,11 @@ export async function GET() {
     return NextResponse.json(
       {
         error: message,
+        status: "empty",
         documentCount: 0,
         chunkCount: 0,
         documents: []
-      },
-      { status: 500 }
+      }
     );
   }
 }

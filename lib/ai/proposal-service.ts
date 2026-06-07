@@ -1,6 +1,7 @@
 import { buildCitations } from "@/lib/ai/source-citations";
 import { generateWithGemini, isGeminiConfigured } from "@/lib/ai/gemini";
-import { retrieveLocalChunks, type LocalRetrievalResult } from "@/lib/rag/local-retrieval";
+import type { LocalRetrievalResult } from "@/lib/rag/local-retrieval";
+import { retrieveChunks } from "@/lib/rag/retrieval";
 import { routeIntent } from "@/lib/ai/intent-router";
 import type { ProposalDraft, ProposalInput, ProposalSection } from "@/lib/ai/proposal-types";
 
@@ -194,24 +195,24 @@ export async function generateProposal(input: ProposalInput): Promise<ProposalDr
 
   const serviceCategory = routeIntent(input.services).preferredServiceCategory;
   const retrievedGroups = await Promise.all([
-    retrieveLocalChunks(`${query} proposal template`, {
+    retrieveChunks(`${query} proposal template`, {
       limit: 3,
       documentType: "prompt_library"
     }),
-    retrieveLocalChunks(query, {
+    retrieveChunks(query, {
       limit: 4,
       documentType: "proposal"
     }),
-    retrieveLocalChunks(`${input.services} ${input.industry}`, {
+    retrieveChunks(`${input.services} ${input.industry}`, {
       limit: 3,
       documentType: "company_profile"
     }),
     serviceCategory
-      ? retrieveLocalChunks(`${input.services} ${input.painPoints}`, {
+      ? retrieveChunks(`${input.services} ${input.painPoints}`, {
           limit: 5,
           serviceCategory
         })
-      : retrieveLocalChunks(`${input.services} ${input.painPoints}`, {
+      : retrieveChunks(`${input.services} ${input.painPoints}`, {
           limit: 5,
           documentType: "portfolio"
         })

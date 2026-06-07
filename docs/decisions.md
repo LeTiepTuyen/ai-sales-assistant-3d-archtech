@@ -1,6 +1,6 @@
 # Decisions
 
-Last updated: 2026-06-06
+Last updated: 2026-06-07
 
 | Date | Decision | Rationale |
 |---|---|---|
@@ -50,3 +50,11 @@ Last updated: 2026-06-06
 | 2026-06-06 | Keep Supabase RAG access server-side only for the public demo. | Processed chunks may contain internal material, so browser clients should not directly read RAG tables; Next.js API routes should retrieve through a server-side secret/service-role key with RLS enabled and no public read policies. |
 | 2026-06-06 | Upload the full approved local demo processed chunk set to Supabase for public demo parity. | The user approved uploading all necessary processed chunks so the public website can demonstrate AI Chat with source coverage close to local; the approval covers processed chunk text, metadata, and embeddings, but not raw PDFs/XLSX, secrets, or unprocessed extracted dumps. |
 | 2026-06-06 | Keep the current project folder structure for the pre-deployment commit and ignore Prompt Hub QA artifacts. | The app, docs, data, and component folders already match the current Next.js demo architecture; temporary accessibility and screenshot artifacts should stay local while deployment-relevant source and documentation are committed. |
+| 2026-06-06 | Deploy FE/UI to Vercel before Supabase-backed RAG and keep local fallback behavior available. | The user requested a staged public deployment with the FE first; this gives a public classroom URL while Supabase runtime retrieval, embeddings, chunk upload, and RAG smoke tests remain the next work package. |
+| 2026-06-06 | Allowlist only the approved Prompt Hub source files in Vercel deployments. | The user explicitly approved making the Prompt Hub public on `/prompts`; the prompt XLSX workbook and prompt PDF are small and needed for full Prompt Hub rendering, while other raw internal source files remain excluded. |
+| 2026-06-07 | Use `gemini-embedding-001` with `outputDimensionality`/`GEMINI_EMBEDDING_DIMENSIONS=768` for Supabase pgvector RAG. | The prepared schema stores `extensions.vector(768)`, so both document-upload embeddings and query embeddings must be generated at the same 768-dimensional size. |
+| 2026-06-07 | Keep Supabase retrieval optional behind `RAG_BACKEND=supabase` with local lexical fallback. | This allows the public deployment to use Supabase-backed citations once configured while preserving a working classroom fallback if Supabase credentials, quota, or the project are unavailable. |
+| 2026-06-07 | Use a dedicated Supabase project `ai-sales-assistant-3darchtech-demo` in `ap-southeast-1` for the classroom demo. | A separate project keeps the RAG data isolated from unrelated older Supabase projects while using the nearby Singapore region and nano/free-tier setup. |
+| 2026-06-07 | Do not retrieve or print Supabase service-role keys through CLI output. | The service-role key is a database secret; the safer workflow is to copy it directly from the Supabase Dashboard into local/Vercel secret environments without exposing it in logs or chat. |
+| 2026-06-07 | Make the Supabase RAG upload script resume-aware. | Gemini embedding Free Tier can rate-limit during the 205-chunk upload, so reruns should skip chunks that already have embeddings and upload only the missing rows. |
+| 2026-06-07 | Deploy the full public classroom demo with Vercel Production env vars and Supabase-backed RAG enabled. | The approved processed chunk set is uploaded, the public smoke tests pass with Gemini responses and Supabase source citations, and the setup remains on the target free-tier stack. |
