@@ -96,12 +96,6 @@ export default function DashboardPage() {
                 description:
                   "Capture client context and generate a structured proposal draft with source-aware sales review notes.",
                 href: "/proposal"
-              },
-              {
-                title: "Data source administration",
-                description:
-                  "Review expected source files and simulated ingestion status before the RAG package is implemented.",
-                href: "/admin/data-sources"
               }
             ].map((item, index) => (
               <div

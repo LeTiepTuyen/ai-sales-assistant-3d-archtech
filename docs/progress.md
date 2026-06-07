@@ -176,6 +176,7 @@ PUBLIC_VERCEL_SUPABASE_RAG_DEPLOYED_AND_SMOKE_TESTED
   - `alpha-factory-client-brief.md`
   - `mekong-logistics-client-brief.md`
   - `orion-property-client-brief.md`
+- Removed the Admin Data Sources entry from the left navigation/mobile navigation and removed the Data Source administration card from the Dashboard, while preserving the direct `/admin/data-sources` route for admin-only access by URL.
 
 ## Important Notes
 

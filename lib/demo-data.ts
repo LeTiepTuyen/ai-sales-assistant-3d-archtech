@@ -1,6 +1,5 @@
 import {
   Bot,
-  Database,
   FileText,
   LibraryBig,
   MessageSquareText,
@@ -28,11 +27,6 @@ export const navItems = [
     href: "/proposal",
     label: "Proposal Generator",
     icon: FileText
-  },
-  {
-    href: "/admin/data-sources",
-    label: "Data Sources",
-    icon: Database
   }
 ];
 

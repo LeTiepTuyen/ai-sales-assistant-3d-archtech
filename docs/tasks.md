@@ -122,6 +122,7 @@ Last updated: 2026-06-07
 - [x] Deploy the FE/UI shell to Vercel production first.
 - [x] Allowlist approved Prompt Hub source files for Vercel deployment so `/prompts` is populated publicly.
 - [x] Add generated Prompt Hub fallback data so `/prompts` remains populated on Vercel even if the source XLSX is absent from the build bundle.
+- [x] Hide the Admin Data Sources route from public navigation and Dashboard links while keeping the direct admin URL available.
 - [x] Implement Supabase runtime integration for deployed RAG.
 - [x] Add Gemini embedding provider behind a server-side API key.
 - [x] Add full approved local demo chunk upload path for Supabase RAG tables.

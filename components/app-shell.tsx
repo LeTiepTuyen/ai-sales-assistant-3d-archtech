@@ -162,7 +162,7 @@ export function AppShell({ children }: { children: React.ReactNode }) {
           </Link>
           <span className="text-xs text-white/55">Local demo</span>
         </div>
-        <nav className="relative mt-3 grid grid-cols-5 gap-1">
+        <nav className="relative mt-3 grid grid-cols-4 gap-1">
           {navItems.map((item) => {
             const active =
               pathname === item.href ||
