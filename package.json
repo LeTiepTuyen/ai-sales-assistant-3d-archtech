@@ -5,6 +5,7 @@
   "scripts": {
     "dev": "next dev",
     "build": "next build",
+    "prompts:generate": "node scripts/generate-prompt-hub-data.mjs",
     "ingest": "node scripts/ingest-documents.mjs",
     "retrieve": "node scripts/search-local-index.mjs",
     "supabase:upload-rag": "node scripts/upload-rag-to-supabase.mjs",

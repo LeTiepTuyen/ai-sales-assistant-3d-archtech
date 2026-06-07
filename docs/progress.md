@@ -165,6 +165,12 @@ PUBLIC_VERCEL_SUPABASE_RAG_DEPLOYED_AND_SMOKE_TESTED
 - Deployed `/api/chat` smoke test passed with provider `gemini`, 6 source citations, and first source `Portfolio Digital Twin.pdf`, confirming Supabase-backed RAG retrieval on the public domain.
 - Deployed `/api/proposals/generate` smoke test passed with provider `gemini`, 9 sections, 12 source citations, and first source from the Prompt Hub PDF.
 - Vercel error-log check after deployed smoke tests returned no error logs.
+- Public `/prompts` briefly regressed to the empty "Prompt library unavailable" state after the Supabase-backed redeploy because the source workbook was not available to the Vercel build/runtime.
+- Added `scripts/generate-prompt-hub-data.mjs` and committed `lib/prompt-hub/generated-prompts.json` with the 16 approved Prompt Hub prompts extracted from `[3D Archtech] Prompts for AI sales assistant.xlsx`.
+- `readPromptLibrary()` now falls back to the generated prompt JSON when the workbook cannot be read from the runtime workspace.
+- Prompt Hub fix redeployed to Vercel production deployment `dpl_GP8qEcMMHEXicoMxX3mW6pvbf8Nu`.
+- Public `/prompts` smoke test now passes: HTTP 200, "Prompt library unavailable" absent, `AI Sales Prompt Hub` present, and the known proposal prompt present in the HTML.
+- Vercel error-log check after the Prompt Hub fix returned no error logs.
 
 ## Important Notes
 
@@ -197,5 +203,5 @@ PUBLIC_VERCEL_SUPABASE_RAG_DEPLOYED_AND_SMOKE_TESTED
 ## Next Step
 
 1. Use `https://ai-sales-assistant-3d-archtech.vercel.app` for the classroom demo.
-2. Before demo day, run one quick `/chat` prompt and one `/proposal` generation to wake/verify Supabase and Gemini.
+2. Before demo day, run one quick `/prompts` check, one `/chat` prompt, and one `/proposal` generation to wake/verify Prompt Hub, Supabase, and Gemini.
 3. After the demo, rotate keys or delete Supabase rows if the public demo should no longer retain internal processed chunks.
